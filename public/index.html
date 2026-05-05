@@ -632,15 +632,17 @@ function renderTable(students) {
     const korCell = ['Basis','Aufbau','Abflug'].map(gr => {
       const k = kor[gr] || {};
       const st = k.status || 'ausstehend';
+      const stationsOk = g[gr] && g[gr].stationsOk;
+      // Show korrektur buttons if stations are done OR if abgabe was submitted
       const hasAbgabe = g[gr] && g[gr].abgabe;
-      if (!hasAbgabe) return '';
+      if (!stationsOk && !hasAbgabe) return '';
       return `<div class="kor-cell" style="margin-bottom:2px;">
-        <span style="font-size:10px;color:var(--ink2);font-weight:600;">${gr}</span>
+        <span style="font-size:10px;color:var(--ink2);font-weight:600;">${gr}${hasAbgabe?' 📋':''}</span>
         <div style="display:flex;gap:4px;">
           <button class="kor-btn bestanden ${st==='bestanden'?'active':''}"
-            onclick="setKorrektur(${s.id},'${gr}','bestanden',event)">✓ Bestanden</button>
+            onclick="setKorrektur(${s.id},'${gr}','bestanden',event)">✓</button>
           <button class="kor-btn nicht_bestanden ${st==='nicht_bestanden'?'active':''}"
-            onclick="setKorrektur(${s.id},'${gr}','nicht_bestanden',event)">✗ Nicht best.</button>
+            onclick="setKorrektur(${s.id},'${gr}','nicht_bestanden',event)">✗</button>
         </div>
       </div>`;
     }).join('');
