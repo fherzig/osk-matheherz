@@ -632,10 +632,8 @@ function renderTable(students) {
     const korCell = ['Basis','Aufbau','Abflug'].map(gr => {
       const k = kor[gr] || {};
       const st = k.status || 'ausstehend';
-      const stationsOk = g[gr] && g[gr].stationsOk;
-      // Show korrektur buttons if stations are done OR if abgabe was submitted
       const hasAbgabe = g[gr] && g[gr].abgabe;
-      if (!stationsOk && !hasAbgabe) return '';
+      // Always show korrektur buttons so admin can always correct
       return `<div class="kor-cell" style="margin-bottom:2px;">
         <span style="font-size:10px;color:var(--ink2);font-weight:600;">${gr}${hasAbgabe?' 📋':''}</span>
         <div style="display:flex;gap:4px;">
