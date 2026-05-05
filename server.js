@@ -179,7 +179,7 @@ app.get('/api/admin/students', requireAdmin, async (req, res) => {
     const r = await pool.query(`
       SELECT
         u.id, u.username, u.klasse, u.created_at,
-        (SELECT value FROM progress WHERE user_id=u.id AND key='lerntheke_kreise_v10') AS prog,
+        (SELECT value FROM progress WHERE user_id=u.id AND key='lerntheke_kreise_v11') AS prog,
         (SELECT value FROM progress WHERE user_id=u.id AND key='lerntheke_abgabe_v1')  AS abgabe,
         (SELECT updated_at FROM progress WHERE user_id=u.id
          ORDER BY updated_at DESC LIMIT 1) AS last_active,
