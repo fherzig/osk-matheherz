@@ -1,69 +1,138 @@
 # Lerntheke Kreise & Zylinder – Server
 
 Multi-User-Server mit Login, Fortschrittsspeicherung und Admin-Dashboard.
+Hosting: **fly.io** (dauerhaft kostenlos, EU-Server Frankfurt)
 
 ---
 
-## Einrichten (einmalig, ~15 Minuten)
+## Einrichten (einmalig, ca. 20 Minuten)
 
-### Schritt 1: GitHub Repository anlegen
-
-1. Gehe auf https://github.com → „New repository"
-2. Name: `lerntheke-kreise` (privat oder öffentlich)
-3. Klicke „Create repository"
-4. Lade alle Dateien aus diesem Ordner hoch:
-   - Klicke „uploading an existing file"
-   - Ziehe alle Dateien rein (server.js, package.json, .gitignore, README.md)
-   - Für den `public/` Ordner: erst Ordner anlegen, dann Dateien
-
-> **Tipp:** Nutze GitHub Desktop (https://desktop.github.com) falls du kein Git kennst – einfacher zu bedienen.
+### Was du brauchst
+- GitHub-Account (hast du bereits)
+- Ein Terminal / eine Kommandozeile
+  - **Mac:** Terminal (vorinstalliert, in Programme → Dienstprogramme)
+  - **Windows:** PowerShell oder Windows Terminal
 
 ---
 
-### Schritt 2: Render.com einrichten
+### Schritt 1: flyctl installieren
 
-1. Gehe auf https://render.com → „Get Started for Free"
-2. Mit GitHub-Account anmelden (empfohlen)
-3. Klicke „New +" → „Web Service"
-4. Verbinde dein `lerntheke-kreise` Repository
-5. Einstellungen:
-   - **Name:** lerntheke-kreise (frei wählbar)
-   - **Region:** Frankfurt (EU) ← wichtig für DSGVO
-   - **Branch:** main
-   - **Build Command:** `npm install`
-   - **Start Command:** `node server.js`
-   - **Instance Type:** Free
-6. Klicke „Advanced" → „Add Disk":
-   - **Name:** data
-   - **Mount Path:** /opt/render/project/src/data
-   - **Size:** 1 GB
-7. Unter „Environment Variables" hinzufügen:
-   - `SESSION_SECRET` = (einen langen zufälligen String, z.B. aus https://passwordsgenerator.net)
-   - `DB_PATH` = `/opt/render/project/src/data/lerntheke.db`
-   - `SESSION_DB` = `/opt/render/project/src/data/sessions.db`
-8. Klicke „Create Web Service"
+**Mac:**
+```bash
+brew install flyctl
+```
+*(Falls brew nicht installiert: https://brew.sh)*
 
-→ Render baut und startet den Server (ca. 2 Minuten)
-→ Du bekommst eine URL wie: `https://lerntheke-kreise.onrender.com`
+**Windows (PowerShell als Administrator):**
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://fly.io/install.ps1 | iex"
+```
+
+**Verifizieren:**
+```bash
+fly version
+```
+→ Sollte eine Versionsnummer zeigen.
 
 ---
 
-### Schritt 3: Erste Anmeldung
+### Schritt 2: fly.io Account erstellen & anmelden
 
-Admin-Accounts sind bereits angelegt:
+```bash
+fly auth signup
+```
+→ Öffnet Browser → Mit GitHub anmelden → Kreditkarte hinterlegen (wird **nicht** belastet, nur zur Verifikation)
+
+Oder falls Account schon vorhanden:
+```bash
+fly auth login
+```
+
+---
+
+### Schritt 3: Code auf deinen Computer laden
+
+```bash
+# GitHub Repo klonen (deine URL einsetzen)
+git clone https://github.com/DEIN-USERNAME/lerntheke-kreise.git
+cd lerntheke-kreise
+```
+
+---
+
+### Schritt 4: App bei fly.io anlegen
+
+```bash
+fly launch --no-deploy
+```
+
+Fragen beantworten:
+- **App name:** `lerntheke-kreise` (oder eigenen Namen wählen)
+- **Region:** `fra` (Frankfurt) ← für DSGVO wichtig
+- **Would you like to set up a PostgreSQL database?** → `No`
+- **Would you like to set up an Upstash Redis database?** → `No`
+
+---
+
+### Schritt 5: Persistenten Speicher anlegen
+
+```bash
+fly volumes create lerntheke_data --region fra --size 1
+```
+→ Erstellt 1 GB Speicher für die Datenbank (dauerhaft, übersteht alle Updates)
+
+---
+
+### Schritt 6: SESSION_SECRET setzen
+
+```bash
+fly secrets set SESSION_SECRET=$(openssl rand -hex 32)
+```
+
+*Windows (PowerShell):*
+```powershell
+fly secrets set SESSION_SECRET=$(New-Guid)$(New-Guid)
+```
+
+---
+
+### Schritt 7: Deployen!
+
+```bash
+fly deploy
+```
+
+→ Baut den Container und startet ihn (~3 Minuten)
+→ Am Ende erscheint deine URL: `https://lerntheke-kreise.fly.dev`
+
+---
+
+### Schritt 8: App öffnen
+
+```bash
+fly open
+```
+
+Oder direkt im Browser: `https://lerntheke-kreise.fly.dev`
+
+---
+
+## Erste Anmeldung
+
+Admin-Accounts sind automatisch angelegt:
 
 | Benutzername | Passwort | Klasse |
 |---|---|---|
-| admin_9a | admin123 | 9a |
-| admin_9b | admin123 | 9b |
-| admin_9c | admin123 | 9c |
-| admin_9d | admin123 | 9d |
+| admin_m1m2 | admin123 | M1M2 |
+| admin_m3m4 | admin123 | M3M4 |
+| admin_m5m6 | admin123 | M5M6 |
+| admin_m7m8 | admin123 | M7M8 |
 
-**Bitte sofort Passwort ändern!** (oben rechts → 🔑)
+**⚠️ Bitte sofort Passwort ändern!** (oben rechts → 🔑)
 
 ---
 
-### Schritt 4: Schüler:innen anlegen
+## Schüler:innen anlegen
 
 Im Admin-Dashboard → „Bulk anlegen":
 
@@ -75,25 +144,60 @@ clara.weber,Kreise24!
 
 Format: `benutzername,passwort` – eine Zeile pro Person.
 
-**Tipp:** Du kannst allen das gleiche Startpasswort geben und sie auffordern es zu ändern.
+---
+
+## Updates einspielen (neue Lerntheke oder Bugfix)
+
+```bash
+# Im Projektordner:
+git pull                    # neuesten Stand holen
+fly deploy                  # deployen
+```
+
+Oder direkt über GitHub: Dateien in GitHub aktualisieren, dann:
+```bash
+fly deploy
+```
+
+**Neue Lerntheke hinzufügen:**
+1. HTML-Datei in `public/lerntheken/` legen
+2. In GitHub hochladen (commit + push)
+3. `fly deploy` ausführen
+4. Erscheint automatisch im Dropdown
 
 ---
 
-## Updates einspielen
+## Nützliche Befehle
 
-Wenn neue Versionen der Lerntheke verfügbar sind:
-1. Neue `lerntheke.html` in GitHub hochladen (public/ Ordner)
-2. Render deployed automatisch (ca. 2 Minuten)
-3. Schülerdaten bleiben erhalten
+```bash
+fly logs              # Live-Logs anzeigen (Fehlersuche)
+fly status            # Status der App
+fly open              # App im Browser öffnen
+fly ssh console       # Direkt auf den Server (Fortgeschrittene)
+```
 
 ---
 
 ## Datenschutz / DSGVO
 
-- Daten liegen auf EU-Servern (Frankfurt)
+- Server läuft in **Frankfurt (EU)**
 - Gespeichert werden nur: Benutzername, Passwort-Hash, Klasse, Lernfortschritt
-- Keine persönlichen Daten außer dem Benutzernamen (du bestimmst das Format)
-- SQLite-Datenbank kann jederzeit exportiert/gelöscht werden
+- Keine Weitergabe an Dritte
+- Datenbank kann jederzeit exportiert werden:
+  ```bash
+  fly ssh console -C "sqlite3 /data/lerntheke.db .dump" > backup.sql
+  ```
+
+---
+
+## Kosten
+
+**Dauerhaft kostenlos** im Rahmen des Free Allowance:
+- 3 shared VMs mit je 256MB RAM
+- 3 GB persistenter Speicher
+- Ausreichend für ~200 gleichzeitige Nutzer
+
+Erst ab sehr hohem Traffic entstehen Kosten (für Schulbetrieb nicht relevant).
 
 ---
 
@@ -101,18 +205,12 @@ Wenn neue Versionen der Lerntheke verfügbar sind:
 
 ```bash
 # Datenbank sichern
-scp render-server:/opt/render/project/src/data/lerntheke.db ./backup.db
+fly ssh console -C "cat /data/lerntheke.db" > lerntheke.db
 
-# Auf neuem Server
+# Auf eigenem Linux-Server
 npm install
-DB_PATH=./data/lerntheke.db node server.js
+DB_PATH=/var/data/lerntheke.db \
+SESSION_SECRET=dein-secret \
+node server.js
 ```
-
----
-
-## Kosten
-
-- GitHub: kostenlos
-- Render Free Tier: kostenlos (schläft nach 15min Inaktivität, wacht beim nächsten Request auf)
-- Render Starter ($7/Monat): kein Schlafmodus, empfohlen für Schulbetrieb
 
