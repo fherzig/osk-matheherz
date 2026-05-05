@@ -418,7 +418,7 @@ async function loadLerntheken() {
     const frame = document.getElementById('lerntheke-frame');
 
     if (list.length === 0) {
-      frame.src = '/lerntheken/kreise-und-zylinder.html';
+      frame.src = '/lerntheken/kreise-und-zylinder.html?v=' + Date.now();
       return;
     }
 
@@ -434,7 +434,7 @@ async function loadLerntheken() {
     const lastUrl = localStorage.getItem('lastLerntheke') || list[0].url;
     const validUrl = list.find(l => l.url === lastUrl) ? lastUrl : list[0].url;
     sel.value = validUrl;
-    frame.src = validUrl;
+    frame.src = validUrl + '?v=' + Date.now();
   } catch(e) {
     // Fallback
     document.getElementById('lerntheke-frame').src = '/lerntheken/kreise-und-zylinder.html';
@@ -443,7 +443,7 @@ async function loadLerntheken() {
 
 function switchLerntheke(url) {
   const frame = document.getElementById('lerntheke-frame');
-  frame.src = url;
+  frame.src = url + '?v=' + Date.now();
   localStorage.setItem('lastLerntheke', url);
 }
 
