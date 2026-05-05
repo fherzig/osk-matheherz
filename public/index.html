@@ -352,18 +352,23 @@ let resetId = null;
 
 // Station → Gruppe mapping (17 Stationen, Index = Station-ID)
 const ST_GROUP = [
-  'Pflicht','Basis','Pflicht','Basis','Basis','Basis','Basis','Aufbau',
-  'Aufbau','Aufbau','Basis','Basis','Pflicht','Aufbau','Aufbau','Abflug','Abflug'
+  'Pflicht','Basis','Basis','Basis','Basis','Basis','Basis',
+  'Aufbau','Aufbau','Aufbau','Aufbau','Basis','Pflicht','Aufbau','Aufbau',
+  'Abflug','Abflug'
 ];
-const G_REQ = { Pflicht:2, Basis:4, Aufbau:4, Abflug:1 };
-const G_TOTAL = { Pflicht:3, Basis:7, Aufbau:6, Abflug:2 };
+const G_REQ   = { Pflicht:2, Basis:4, Aufbau:4, Abflug:1 };
+const G_TOTAL = { Pflicht:2, Basis:7, Aufbau:6, Abflug:2 };
 
 function parseGroups(progStr, abgabeStr, korrekturObj) {
   const prog = safeJSON(progStr);
   const abg  = safeJSON(abgabeStr);
   const kor  = korrekturObj || {};
   const done = new Set();
-  if (typeof prog === 'object') {
+  if (Array.isArray(prog)) {
+    // Lerntheke stores as array: [0, 3, 5, ...]
+    prog.forEach(id => done.add(Number(id)));
+  } else if (typeof prog === 'object' && prog !== null) {
+    // Fallback: object format {0:true, 3:true}
     Object.keys(prog).forEach(k => { if (prog[k]) done.add(Number(k)); });
   }
   const result = {};
@@ -466,6 +471,10 @@ async function doLogin() {
 
 async function doLogout() {
   await fetch('/api/logout', { method:'POST' });
+  // Clear lerntheke keys from localStorage so next user starts clean
+  Object.keys(localStorage)
+    .filter(k => k.startsWith('lerntheke_'))
+    .forEach(k => localStorage.removeItem(k));
   me = null;
   location.reload();
 }
@@ -484,14 +493,18 @@ async function showApp() {
     document.getElementById('tab-admin').style.display = '';
   }
 
-  showView('lerntheke');
-
-  // Load lerntheken list
-  await loadLerntheken();
-
-  // Sync progress from server into iframe localStorage after iframe loads
-  const frame = document.getElementById('lerntheke-frame');
-  frame.addEventListener('load', syncProgressToFrame);
+  if (me.role === 'admin') {
+    // Admins see admin view, no iframe needed
+    document.getElementById('lerntheke-frame').style.display = 'none';
+    document.getElementById('lt-admin-placeholder').style.display = 'flex';
+    showView('admin');
+  } else {
+    showView('lerntheke');
+    // Load lerntheken list and sync progress
+    await loadLerntheken();
+    const frame = document.getElementById('lerntheke-frame');
+    frame.addEventListener('load', syncProgressToFrame);
+  }
 }
 
 async function syncProgressToFrame() {
