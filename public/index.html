@@ -396,7 +396,9 @@ function parseGroups(progStr, abgabeStr, korrekturObj) {
 }
 
 function safeJSON(s) {
-  try { return s ? JSON.parse(s) : {}; } catch { return {}; }
+  if (!s) return {};
+  if (typeof s === 'object') return s; // already parsed
+  try { return JSON.parse(s); } catch { return {}; }
 }
 
 // ══ Session check on load ════════════════════════════════════════════════════
@@ -608,7 +610,7 @@ function renderTable(students) {
     return;
   }
   tbody.innerHTML = students.map(s => {
-    const g = parseGroups(s.prog, s.abgabe, s.korrektur);
+    const g = parseGroups(s.prog, typeof s.abgabe === "string" ? s.abgabe : JSON.stringify(s.abgabe||{}), s.korrektur);
     const groupCells = ['Pflicht','Basis','Aufbau','Abflug'].map(grp => {
       const st = g[grp];
       const pct = Math.min(100, Math.round(st.done/st.total*100));
