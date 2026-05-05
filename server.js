@@ -322,6 +322,28 @@ app.get('/api/korrektur', requireLogin, async (req, res) => {
   } catch(e) { res.status(500).json({ error: 'Serverfehler' }); }
 });
 
+
+// Admin: get full progress (including inputs) of a specific student
+app.get('/api/admin/student-progress/:userId', requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    // Verify student belongs to admin's class
+    const user = await pool.query(
+      'SELECT id, username, klasse FROM users WHERE id=$1 AND klasse=$2 AND role=$3',
+      [userId, req.session.klasse, 'student']
+    );
+    if (!user.rows.length) return res.status(404).json({ error: 'Nicht gefunden' });
+
+    const rows = await pool.query(
+      'SELECT key, value FROM progress WHERE user_id=$1',
+      [userId]
+    );
+    const progress = {};
+    rows.rows.forEach(r => { progress[r.key] = r.value; });
+    res.json({ username: user.rows[0].username, progress });
+  } catch(e) { res.status(500).json({ error: 'Serverfehler' }); }
+});
+
 // ── Catch-all ─────────────────────────────────────────────────────────────────
 app.get('*', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'index.html'))

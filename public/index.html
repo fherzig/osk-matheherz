@@ -660,6 +660,7 @@ function renderTable(students) {
       <td style="color:var(--ink2);">${lastActive}</td>
       <td>
         <div class="action-btns">
+          <button class="btn-icon" onclick="viewStudent(${s.id},'${s.username}')">👁</button>
           <button class="btn-icon" onclick="openReset(${s.id},'${s.username}')">🔑</button>
           <button class="btn-icon red" onclick="deleteStudent(${s.id},'${s.username}')">🗑</button>
         </div>
@@ -777,6 +778,69 @@ async function setKorrektur(userId, gruppe, status, event) {
     body: JSON.stringify({ userId, gruppe, status })
   });
   loadStudents();
+}
+
+
+let viewingStudent = null;
+
+async function viewStudent(userId, username) {
+  try {
+    const r = await fetch('/api/admin/student-progress/' + userId);
+    if (!r.ok) return;
+    const data = await r.json();
+
+    // Show lerntheke tab with student's data
+    viewingStudent = { userId, username, progress: data.progress };
+
+    // Inject progress into iframe localStorage and load
+    const frame = document.getElementById('lerntheke-frame');
+    showView('lerntheke');
+
+    // Wait for frame to be visible, then inject data
+    setTimeout(async () => {
+      if (!frame.contentWindow) return;
+      // Clear existing lerntheke keys
+      Object.keys(frame.contentWindow.localStorage)
+        .filter(k => k.startsWith('lerntheke_'))
+        .forEach(k => frame.contentWindow.localStorage.removeItem(k));
+      // Inject student data
+      Object.entries(data.progress).forEach(([k,v]) => {
+        frame.contentWindow.localStorage.setItem(k, v);
+      });
+      frame.contentWindow.postMessage({ type: 'RELOAD_PROGRESS' }, '*');
+
+      // Show banner
+      showStudentBanner(username);
+    }, 200);
+  } catch(e) { console.error('viewStudent error:', e); }
+}
+
+function showStudentBanner(username) {
+  let banner = document.getElementById('student-view-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'student-view-banner';
+    banner.style.cssText = 'background:#7c3aed;color:white;padding:8px 20px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:12px;flex-shrink:0;';
+    const tabsEl = document.getElementById('app-tabs');
+    tabsEl.parentNode.insertBefore(banner, tabsEl.nextSibling);
+  }
+  banner.innerHTML = '👁 Ansicht von: <strong>' + username + '</strong> &nbsp;–&nbsp; Nur Lesemodus <button onclick="exitStudentView()" style="margin-left:auto;background:rgba(255,255,255,.2);border:none;color:white;padding:4px 10px;border-radius:5px;cursor:pointer;font-weight:600;">✕ Beenden</button>';
+  banner.style.display = 'flex';
+}
+
+async function exitStudentView() {
+  viewingStudent = null;
+  const banner = document.getElementById('student-view-banner');
+  if (banner) banner.style.display = 'none';
+  // Restore admin's own (empty) state
+  const frame = document.getElementById('lerntheke-frame');
+  if (frame.contentWindow) {
+    Object.keys(frame.contentWindow.localStorage)
+      .filter(k => k.startsWith('lerntheke_'))
+      .forEach(k => frame.contentWindow.localStorage.removeItem(k));
+    frame.contentWindow.postMessage({ type: 'RELOAD_PROGRESS' }, '*');
+  }
+  showView('admin');
 }
 
 function exportCSV() {

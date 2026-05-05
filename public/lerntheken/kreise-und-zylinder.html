@@ -520,6 +520,7 @@ function buildOverview(){
 }
 
 function showSt(id){
+  saveInputs();
   cur=id;
   const m=META[id],c=CONTENT[id];
   const badge=document.getElementById('st-badge');
@@ -577,6 +578,7 @@ function showSt(id){
     strip.style.display='block';
   }else{strip.style.display='none';}
   showView('view-st');
+  setTimeout(()=>loadInputs(id),50);
 }
 
 function toggleSol(btn){
@@ -820,6 +822,7 @@ function resetKA() {
 
 function makeCheckFn(selector, resultId, lockId) {
   return function() {
+    saveInputs();
     const inputs = document.querySelectorAll(selector + ' .cell-input');
     let correct=0, total=0, empty=0;
     inputs.forEach(inp => {
@@ -896,7 +899,7 @@ function checkFrisbee2() {
   if(passed){if(solWrap)solWrap.style.display='';if(solLock)solLock.style.display='none';if(!done.has(cur)){done.add(cur);save();updProg();buildOverview();}}
   else{if(solWrap)solWrap.style.display='none';if(solLock)solLock.style.display='flex';}
 }
-function checkFrisbee(){checkFrisbee2();}
+function checkFrisbee(){saveInputs();checkFrisbee2();}
 function resetFrisbee(){
   document.querySelectorAll('#st-body .cell-input').forEach(inp=>{
     inp.value='';inp.classList.remove('input-ok','input-err','input-empty');
@@ -1001,6 +1004,7 @@ function resetSonnensystem(){
 
 function makeCheckGeneric(resultId, lockId) {
   return function() {
+    saveInputs();
     const inputs = document.querySelectorAll('#st-body .cell-input');
     let correct=0,total=0,empty=0;
     inputs.forEach(inp=>{
@@ -1063,8 +1067,66 @@ const resetEinheitenFlaeche = makeResetGeneric('check-result-einheiten-flaeche')
 const checkEinheitenVolumen = makeCheckGeneric('check-result-einheiten-volumen','sol-lock-einheiten-v');
 const resetEinheitenVolumen = makeResetGeneric('check-result-einheiten-volumen');
 
-function showOv(){buildOverview();showView('view-ov');}
+function saveInputs(){
+  if(cur===null) return;
+  const inputs = document.querySelectorAll('#st-body .cell-input');
+  if(!inputs.length) return;
+  const vals = {};
+  inputs.forEach((inp,i) => { vals[i] = inp.value; });
+  const key = 'lerntheke_inputs_' + cur;
+  const encoded = JSON.stringify(vals);
+  localStorage.setItem(key, encoded);
+  window.parent.postMessage({type:'SAVE_PROGRESS', key, value: encoded}, '*');
+}
+
+function loadInputs(id){
+  const key = 'lerntheke_inputs_' + id;
+  const raw = localStorage.getItem(key);
+  if(!raw) return;
+  try {
+    const vals = JSON.parse(raw);
+    const inputs = document.querySelectorAll('#st-body .cell-input');
+    inputs.forEach((inp,i) => {
+      if(vals[i] !== undefined && vals[i] !== '') inp.value = vals[i];
+    });
+  } catch(e) {}
+}
+
+function showOv(){saveInputs();buildOverview();showView('view-ov');}
 buildOverview();
+</script>
+
+<script>
+(function() {
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === 'RELOAD_PROGRESS') {
+      try {
+        const KEY = 'lerntheke_kreise_v10';
+        const ABGABE_KEY = 'lerntheke_abgabe_v1';
+        const raw = localStorage.getItem(KEY);
+        if (typeof done !== 'undefined') {
+          done.clear();
+          if (raw) { try { JSON.parse(raw).forEach(id => done.add(id)); } catch(e){} }
+        }
+        if (typeof abgabeState !== 'undefined') {
+          const abgRaw = localStorage.getItem(ABGABE_KEY);
+          if (abgRaw) { try { Object.assign(abgabeState, JSON.parse(abgRaw)); } catch(e){} }
+        }
+        if (typeof serverSyncDone !== 'undefined') serverSyncDone = true;
+        if (typeof buildOverview === 'function') buildOverview();
+        if (typeof loadKorrektur === 'function') loadKorrektur();
+        // Also reload inputs for current station
+        if (typeof loadInputs === 'function' && typeof cur !== 'undefined' && cur !== null) {
+          setTimeout(() => loadInputs(cur), 100);
+        }
+      } catch(err) { console.warn('sync error', err); }
+    }
+  });
+  if (window.self === window.top) {
+    if (typeof serverSyncDone !== 'undefined') serverSyncDone = true;
+  }
+})();
 </script>
 </body>
 </html>
