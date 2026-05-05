@@ -500,40 +500,43 @@ async function showApp() {
     showView('admin');
   } else {
     showView('lerntheke');
-    // Load lerntheken list and sync progress
-    await loadLerntheken();
+    // Register load listener BEFORE setting src
     const frame = document.getElementById('lerntheke-frame');
     frame.addEventListener('load', syncProgressToFrame);
+    // Now load lerntheken list (which sets frame.src)
+    await loadLerntheken();
   }
 }
 
 async function syncProgressToFrame() {
+  // Wait a tick to ensure iframe JS has initialized
+  await new Promise(r => setTimeout(r, 100));
   try {
     const r = await fetch('/api/progress');
     if (!r.ok) return;
     const data = await r.json();
     const frame = document.getElementById('lerntheke-frame');
     if (!frame.contentWindow) return;
-    // Only inject if server actually has progress data
-    if (Object.keys(data).length > 0) {
-      Object.entries(data).forEach(([k, v]) => {
-        frame.contentWindow.localStorage.setItem(k, v);
-      });
-      frame.contentWindow.postMessage({ type: 'RELOAD_PROGRESS' }, '*');
-    }
-    // Always load korrektur
-    frame.contentWindow.postMessage({ type: 'LOAD_KORREKTUR' }, '*');
-  } catch(e) { console.warn('Progress sync failed:', e); }
+    // Always inject - even empty data triggers unlock of saves
+    Object.entries(data).forEach(([k, v]) => {
+      frame.contentWindow.localStorage.setItem(k, v);
+    });
+    // Signal iframe: server data is ready, unlock saves
+    frame.contentWindow.postMessage({ type: 'RELOAD_PROGRESS' }, '*');
+    console.log('[Sync] Sent RELOAD_PROGRESS with keys:', Object.keys(data));
+  } catch(e) { console.warn('[Sync] Progress sync failed:', e); }
 }
 
 // Listen for progress saves from the iframe
 window.addEventListener('message', async (e) => {
   if (!e.data || e.data.type !== 'SAVE_PROGRESS') return;
   const { key, value } = e.data;
-  await fetch('/api/progress', {
+  console.log('[Save] Saving to server:', key, '=', value.substring(0,50));
+  const r = await fetch('/api/progress', {
     method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ key, value })
   });
+  if (!r.ok) console.error('[Save] Failed:', r.status);
 });
 
 // ══ View switching ═══════════════════════════════════════════════════════════
