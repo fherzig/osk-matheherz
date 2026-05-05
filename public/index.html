@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Lerntheke · Kreise</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1d4ed8;--blue-lt:#eff6ff;--green:#16a34a;--green-lt:#f0fdf4;
+  --ink:#1e293b;--ink2:#64748b;--border:#e2e8f0;--bg:#f8fafc;--white:#fff;
+  --r:10px;--shadow:0 2px 8px rgba(0,0,0,.08);
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);min-height:100vh;color:var(--ink);}
+button{cursor:pointer;font-family:inherit;}
+
+/* ══ LOGIN ════════════════════════════════════════════════════════════════════ */
+#login-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;
+}
+.login-card{
+  background:var(--white);border-radius:18px;padding:44px 40px;
+  width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.12);
+}
+.login-logo{font-size:38px;margin-bottom:10px;}
+.login-title{font-size:26px;font-weight:800;color:var(--ink);margin-bottom:4px;}
+.login-sub{color:var(--ink2);font-size:14px;margin-bottom:30px;}
+.form-group{margin-bottom:18px;}
+.form-label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;}
+.form-input{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);
+  border-radius:var(--r);font-size:15px;outline:none;
+  transition:border-color .15s;background:var(--white);
+}
+.form-input:focus{border-color:var(--blue);}
+.btn-primary{
+  width:100%;padding:13px;background:var(--blue);color:var(--white);
+  border:none;border-radius:var(--r);font-size:15px;font-weight:700;
+  transition:background .15s;
+}
+.btn-primary:hover{background:#1e40af;}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.login-error{color:#dc2626;font-size:13px;margin-top:12px;text-align:center;min-height:18px;}
+
+/* ══ APP SHELL ════════════════════════════════════════════════════════════════ */
+#app{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+
+.topbar{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:10px 20px;display:flex;align-items:center;gap:10px;
+  flex-shrink:0;z-index:50;
+}
+.topbar-title{font-weight:800;font-size:16px;color:var(--ink);flex:1;}
+.topbar-user{font-size:13px;color:var(--ink2);white-space:nowrap;}
+.pill{
+  display:inline-block;border-radius:99px;padding:3px 11px;
+  font-size:12px;font-weight:700;white-space:nowrap;
+}
+.pill-blue{background:var(--blue-lt);color:var(--blue);}
+.pill-purple{background:#f5f3ff;color:#7c3aed;}
+.btn-sm{
+  padding:7px 14px;border-radius:7px;font-size:13px;font-weight:600;
+  border:1.5px solid var(--border);background:var(--white);color:var(--ink);
+  transition:background .15s;white-space:nowrap;
+}
+.btn-sm:hover{background:var(--bg);}
+.btn-sm.purple{background:#7c3aed;border-color:#7c3aed;color:var(--white);}
+.btn-sm.purple:hover{background:#6d28d9;}
+
+/* ══ TABS ═════════════════════════════════════════════════════════════════════ */
+.tabs{
+  display:flex;background:var(--white);border-bottom:2px solid var(--border);
+  padding:0 20px;flex-shrink:0;
+}
+.tab{
+  padding:11px 22px;font-weight:600;font-size:14px;color:var(--ink2);
+  cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:all .15s;
+}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab:hover:not(.active){color:var(--ink);}
+
+/* ══ LERNTHEKE IFRAME ════════════════════════════════════════════════════════ */
+#view-lerntheke{flex:1;overflow:hidden;}
+#lerntheke-frame{width:100%;height:100%;border:none;display:block;}
+
+/* ══ ADMIN ════════════════════════════════════════════════════════════════════ */
+#view-admin{flex:1;overflow-y:auto;display:none;padding:24px;}
+
+.admin-top{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.admin-title{font-size:20px;font-weight:800;flex:1;}
+
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--white);border-radius:var(--r);padding:16px 20px;border:1.5px solid var(--border);}
+.stat-val{font-size:30px;font-weight:800;color:var(--blue);}
+.stat-lbl{font-size:12px;color:var(--ink2);margin-top:2px;}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.search{
+  flex:1;min-width:180px;padding:9px 14px;border:1.5px solid var(--border);
+  border-radius:var(--r);font-size:14px;outline:none;
+}
+.search:focus{border-color:var(--blue);}
+.btn-act{
+  padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:600;
+  border:none;transition:background .15s;white-space:nowrap;
+}
+.btn-green{background:var(--green);color:var(--white);}
+.btn-green:hover{background:#15803d;}
+.btn-blue{background:var(--blue);color:var(--white);}
+.btn-blue:hover{background:#1e40af;}
+.btn-red{background:#dc2626;color:var(--white);}
+.btn-red:hover{background:#b91c1c;}
+.btn-outline{background:var(--white);border:1.5px solid var(--border);color:var(--ink);}
+.btn-outline:hover{background:var(--bg);}
+
+/* Table */
+.tbl-wrap{background:var(--white);border-radius:var(--r);border:1.5px solid var(--border);overflow:auto;}
+table{width:100%;border-collapse:collapse;min-width:700px;}
+th{background:var(--bg);font-size:12px;font-weight:700;color:var(--ink2);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbff;}
+
+.mini-bar{height:6px;background:var(--border);border-radius:3px;width:100px;overflow:hidden;display:inline-block;}
+.mini-fill{height:100%;border-radius:3px;transition:width .3s;}
+
+.gpill{
+  display:inline-block;font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:99px;margin:1px;
+}
+.gpill-ok{background:var(--green-lt);color:var(--green);}
+.gpill-partial{background:#fffbeb;color:#d97706;}
+.gpill-none{background:var(--bg);color:#94a3b8;}
+
+.action-btns{display:flex;gap:6px;}
+.btn-icon{
+  padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;
+  border:1.5px solid var(--border);background:var(--white);color:var(--ink);
+}
+.btn-icon:hover{background:var(--bg);}
+.btn-icon.red{border-color:#fecaca;color:#dc2626;}
+.btn-icon.red:hover{background:#fff5f5;}
+
+/* ══ MODALS ══════════════════════════════════════════════════════════════════ */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.overlay.open{display:flex;}
+.modal{
+  background:var(--white);border-radius:16px;padding:28px;
+  width:100%;max-width:500px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 12px 48px rgba(0,0,0,.2);
+}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:18px;}
+.modal-hint{font-size:13px;color:var(--ink2);margin-bottom:14px;line-height:1.6;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.btn-cancel{
+  padding:9px 18px;border-radius:var(--r);font-size:13px;font-weight:600;
+  border:1.5px solid var(--border);background:var(--white);color:var(--ink);
+}
+textarea.form-input{resize:vertical;min-height:130px;font-family:monospace;font-size:12px;}
+.msg{font-size:13px;margin-top:10px;padding:8px 12px;border-radius:6px;}
+.msg.ok{background:var(--green-lt);color:var(--green);}
+.msg.err{background:#fef2f2;color:#dc2626;}
+
+/* ══ CHANGE PW ═══════════════════════════════════════════════════════════════ */
+#view-changepw{
+  display:none;flex:1;align-items:center;justify-content:center;padding:24px;
+}
+.changepw-card{background:var(--white);border-radius:var(--r);padding:28px;width:100%;max-width:380px;border:1.5px solid var(--border);}
+
+@media(max-width:600px){
+  .topbar{padding:8px 14px;gap:6px;}
+  .topbar-user{display:none;}
+  .login-card{padding:32px 24px;}
+  .admin-title{font-size:17px;}
+  #view-admin{padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">📐</div>
+    <div class="login-title">Lerntheke Kreise</div>
+    <div class="login-sub">Klasse 9 · Melde dich an um loszulegen</div>
+    <div class="form-group">
+      <label class="form-label" for="inp-user">Benutzername</label>
+      <input class="form-input" id="inp-user" autocomplete="username" placeholder="z.B. anna.mueller">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="inp-pass">Passwort</label>
+      <input class="form-input" id="inp-pass" type="password" autocomplete="current-password" placeholder="••••••">
+    </div>
+    <button class="btn-primary" id="btn-login" onclick="doLogin()">Anmelden →</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <div class="topbar">
+    <div class="topbar-title">📐 Lerntheke · Kreise</div>
+    <span class="topbar-user" id="bar-user"></span>
+    <span class="pill pill-blue" id="bar-klasse"></span>
+    <span class="pill pill-purple" id="bar-role" style="display:none">Admin</span>
+    <button class="btn-sm" onclick="showView('changepw')" title="Passwort ändern">🔑</button>
+    <button class="btn-sm" onclick="doLogout()">Abmelden</button>
+  </div>
+
+  <div class="tabs" id="app-tabs">
+    <div class="tab active" id="tab-lt" onclick="showView('lerntheke')">📚 Lerntheke</div>
+    <div class="tab" id="tab-admin" style="display:none" onclick="showView('admin')">📊 Klassen-Übersicht</div>
+  </div>
+
+  <div id="view-lerntheke" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+    <div id="lt-picker" style="display:none;padding:8px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+    <label style="font-size:13px;font-weight:600;color:#374151;margin-right:8px;">Lerntheke:</label>
+    <select id="lt-select" onchange="switchLerntheke(this.value)" style="padding:6px 10px;border-radius:7px;border:1.5px solid #e2e8f0;font-size:14px;background:white;"></select>
+  </div>
+  <iframe id="lerntheke-frame" src="" title="Lerntheke" style="flex:1;border:none;display:block;width:100%;"></iframe>
+  </div>
+
+  <div id="view-admin">
+    <div class="admin-top">
+      <div class="admin-title" id="admin-title">Klasse</div>
+    </div>
+    <div class="stats-row" id="stats-row"></div>
+    <div class="toolbar">
+      <input class="search" id="search-inp" placeholder="🔍 Suche nach Name…" oninput="filterTable()">
+      <button class="btn-act btn-green" onclick="openBulk()">+ Bulk anlegen</button>
+      <button class="btn-act btn-outline" onclick="openSingle()">+ Einzeln anlegen</button>
+      <button class="btn-act btn-outline" onclick="exportCSV()">↓ CSV</button>
+      <button class="btn-act btn-outline" onclick="loadStudents()">↺ Laden</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>🔴 Pflicht</th>
+            <th>🔵 Basis</th>
+            <th>🟢 Aufbau</th>
+            <th>🟣 Abflug</th>
+            <th>Abgaben</th>
+            <th>Zuletzt aktiv</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="stbl"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="view-changepw">
+    <div class="changepw-card">
+      <div style="font-size:17px;font-weight:800;margin-bottom:18px;">🔑 Passwort ändern</div>
+      <div class="form-group">
+        <label class="form-label">Altes Passwort</label>
+        <input class="form-input" id="cpw-old" type="password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Neues Passwort</label>
+        <input class="form-input" id="cpw-new" type="password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wiederholen</label>
+        <input class="form-input" id="cpw-rep" type="password">
+      </div>
+      <div id="cpw-msg"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn-cancel" onclick="showView('lerntheke')">Abbrechen</button>
+        <button class="btn-act btn-blue" onclick="doChangePw()">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ MODAL: Bulk anlegen ════════════════════════════════════════════════════ -->
+<div class="overlay" id="modal-bulk">
+  <div class="modal">
+    <div class="modal-title">Schüler:innen anlegen (Bulk)</div>
+    <div class="modal-hint">
+      Eine Zeile pro Person: <code>benutzername,passwort</code><br>
+      Benutzername: nur Kleinbuchstaben, Zahlen, Punkte<br>
+      Beispiel: <code>anna.mueller,Kreise24!</code>
+    </div>
+    <textarea class="form-input" id="bulk-txt" placeholder="anna.mueller,Kreise24!&#10;ben.schmidt,Kreise24!&#10;..."></textarea>
+    <div id="bulk-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-bulk')">Abbrechen</button>
+      <button class="btn-act btn-green" onclick="doBulk()">Anlegen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Einzeln anlegen ════════════════════════════════════════════════ -->
+<div class="overlay" id="modal-single">
+  <div class="modal">
+    <div class="modal-title">Schüler:in anlegen</div>
+    <div class="form-group">
+      <label class="form-label">Benutzername</label>
+      <input class="form-input" id="s-user" placeholder="anna.mueller">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Passwort</label>
+      <input class="form-input" id="s-pass" type="text" placeholder="Kreise24!">
+    </div>
+    <div id="single-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-single')">Abbrechen</button>
+      <button class="btn-act btn-green" onclick="doSingle()">Anlegen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: PW Reset ═══════════════════════════════════════════════════════ -->
+<div class="overlay" id="modal-reset">
+  <div class="modal">
+    <div class="modal-title">Passwort zurücksetzen</div>
+    <div class="modal-hint">Neues Passwort für <strong id="reset-name"></strong></div>
+    <input class="form-input" id="reset-pw" type="text" placeholder="Neues Passwort">
+    <div id="reset-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-reset')">Abbrechen</button>
+      <button class="btn-act btn-blue" onclick="doReset()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ State ════════════════════════════════════════════════════════════════════
+let me = null;
+let allStudents = [];
+let resetId = null;
+
+// Station → Gruppe mapping (17 Stationen, Index = Station-ID)
+const ST_GROUP = [
+  'Pflicht','Basis','Pflicht','Basis','Basis','Basis','Basis','Aufbau',
+  'Aufbau','Aufbau','Basis','Basis','Pflicht','Aufbau','Aufbau','Abflug','Abflug'
+];
+const G_REQ = { Pflicht:2, Basis:4, Aufbau:4, Abflug:1 };
+const G_TOTAL = { Pflicht:3, Basis:7, Aufbau:6, Abflug:2 };
+
+function parseGroups(progStr, abgabeStr) {
+  const prog = safeJSON(progStr);
+  const abg  = safeJSON(abgabeStr);
+  const done = new Set();
+  // prog is the serialized localStorage value: JSON of {0:true,1:true,...} or a Set
+  if (typeof prog === 'object') {
+    Object.keys(prog).forEach(k => { if (prog[k]) done.add(Number(k)); });
+  }
+  const result = {};
+  Object.keys(G_REQ).forEach(g => {
+    const ids = ST_GROUP.map((gr,i) => gr===g ? i : -1).filter(i=>i>=0);
+    const cnt = ids.filter(i=>done.has(i)).length;
+    result[g] = {
+      done: cnt, req: G_REQ[g], total: G_TOTAL[g],
+      stationsOk: cnt >= G_REQ[g],
+      abgabe: !!(abg && abg[g]),
+      complete: cnt >= G_REQ[g] && (g==='Pflicht' || !!(abg && abg[g]))
+    };
+  });
+  return result;
+}
+
+function safeJSON(s) {
+  try { return s ? JSON.parse(s) : {}; } catch { return {}; }
+}
+
+// ══ Session check on load ════════════════════════════════════════════════════
+(async () => {
+  try {
+    const r = await fetch('/api/me');
+    const d = await r.json();
+    if (d.loggedIn) { me = d; showApp(); }
+  } catch {}
+})();
+
+// ══ Login ════════════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none')
+    doLogin();
+});
+
+async function loadLerntheken() {
+  try {
+    const r = await fetch('/api/lerntheken');
+    const list = await r.json();
+    const picker = document.getElementById('lt-picker');
+    const sel = document.getElementById('lt-select');
+    const frame = document.getElementById('lerntheke-frame');
+
+    if (list.length === 0) {
+      frame.src = '/lerntheken/kreise-und-zylinder.html';
+      return;
+    }
+
+    // Populate dropdown
+    sel.innerHTML = list.map(l =>
+      `<option value="${l.url}">${l.title}</option>`
+    ).join('');
+
+    // Show picker only if multiple lerntheken exist
+    if (list.length > 1) picker.style.display = 'flex';
+
+    // Load first (or restore last used)
+    const lastUrl = localStorage.getItem('lastLerntheke') || list[0].url;
+    const validUrl = list.find(l => l.url === lastUrl) ? lastUrl : list[0].url;
+    sel.value = validUrl;
+    frame.src = validUrl;
+  } catch(e) {
+    // Fallback
+    document.getElementById('lerntheke-frame').src = '/lerntheken/kreise-und-zylinder.html';
+  }
+}
+
+function switchLerntheke(url) {
+  const frame = document.getElementById('lerntheke-frame');
+  frame.src = url;
+  localStorage.setItem('lastLerntheke', url);
+}
+
+async function doLogin() {
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('login-error');
+  const username = document.getElementById('inp-user').value.trim();
+  const password = document.getElementById('inp-pass').value;
+  err.textContent = '';
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const r = await fetch('/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.error; btn.disabled=false; btn.textContent='Anmelden →'; return; }
+    me = d;
+    showApp();
+  } catch {
+    err.textContent = 'Verbindungsfehler – bitte Seite neu laden.';
+    btn.disabled=false; btn.textContent='Anmelden →';
+  }
+}
+
+async function doLogout() {
+  await fetch('/api/logout', { method:'POST' });
+  me = null;
+  location.reload();
+}
+
+// ══ App shell ════════════════════════════════════════════════════════════════
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+
+  document.getElementById('bar-user').textContent = me.username;
+  document.getElementById('bar-klasse').textContent = 'Klasse ' + me.klasse;
+
+  if (me.role === 'admin') {
+    document.getElementById('bar-role').style.display = '';
+    document.getElementById('tab-admin').style.display = '';
+  }
+
+  showView('lerntheke');
+
+  // Load lerntheken list
+  await loadLerntheken();
+
+  // Sync progress from server into iframe localStorage after iframe loads
+  const frame = document.getElementById('lerntheke-frame');
+  frame.addEventListener('load', syncProgressToFrame);
+}
+
+async function syncProgressToFrame() {
+  // Load server progress and inject into iframe's localStorage
+  try {
+    const r = await fetch('/api/progress');
+    const data = await r.json();
+    const frame = document.getElementById('lerntheke-frame');
+    if (!frame.contentWindow) return;
+    Object.entries(data).forEach(([k, v]) => {
+      frame.contentWindow.localStorage.setItem(k, v);
+    });
+    // Tell iframe to reload its state
+    frame.contentWindow.postMessage({ type: 'RELOAD_PROGRESS' }, '*');
+  } catch(e) { console.warn('Progress sync failed:', e); }
+}
+
+// Listen for progress saves from the iframe
+window.addEventListener('message', async (e) => {
+  if (!e.data || e.data.type !== 'SAVE_PROGRESS') return;
+  const { key, value } = e.data;
+  await fetch('/api/progress', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ key, value })
+  });
+});
+
+// ══ View switching ═══════════════════════════════════════════════════════════
+function showView(v) {
+  ['lerntheke','admin','changepw'].forEach(id => {
+    const el = document.getElementById('view-' + id);
+    if (id === 'lerntheke') {
+      el.style.display = (v===id) ? 'flex' : 'none';
+      // Set flex:1 for lerntheke
+      el.style.flex = (v===id) ? '1' : '';
+    } else {
+      el.style.display = (v===id) ? (id==='admin'?'block':'flex') : 'none';
+    }
+    const tab = document.getElementById('tab-' + id);
+    if (tab) tab.classList.toggle('active', v===id);
+  });
+  if (v === 'admin') loadStudents();
+}
+
+// ══ Admin: load students ══════════════════════════════════════════════════════
+async function loadStudents() {
+  const r = await fetch('/api/admin/students');
+  if (!r.ok) return;
+  allStudents = await r.json();
+
+  const sr = await fetch('/api/admin/stats');
+  if (sr.ok) {
+    const stats = await sr.json();
+    document.getElementById('admin-title').textContent =
+      `Klasse ${stats.klasse} – Fortschritt`;
+    document.getElementById('stats-row').innerHTML = `
+      <div class="stat-card"><div class="stat-val">${stats.total}</div><div class="stat-lbl">Schüler:innen</div></div>
+      <div class="stat-card"><div class="stat-val">${stats.active}</div><div class="stat-lbl">Aktiv (7 Tage)</div></div>
+      <div class="stat-card"><div class="stat-val">${allStudents.filter(s=>{const g=parseGroups(s.prog,s.abgabe);return g.Pflicht.complete;}).length}</div><div class="stat-lbl">Pflicht ✓</div></div>
+      <div class="stat-card"><div class="stat-val">${allStudents.filter(s=>{const g=parseGroups(s.prog,s.abgabe);return g.Basis.complete;}).length}</div><div class="stat-lbl">Basis LZK bereit</div></div>
+      <div class="stat-card"><div class="stat-val">${allStudents.filter(s=>{const g=parseGroups(s.prog,s.abgabe);return g.Aufbau.complete;}).length}</div><div class="stat-lbl">Aufbau LZK bereit</div></div>
+    `;
+  }
+  renderTable(allStudents);
+}
+
+function renderTable(students) {
+  const tbody = document.getElementById('stbl');
+  if (!students.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--ink2);text-align:center;padding:24px;">Noch keine Schüler:innen angelegt.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = students.map(s => {
+    const g = parseGroups(s.prog, s.abgabe);
+    const groupCells = ['Pflicht','Basis','Aufbau','Abflug'].map(grp => {
+      const st = g[grp];
+      const pct = Math.min(100, Math.round(st.done/st.total*100));
+      const cls = st.complete ? 'gpill-ok' : st.stationsOk ? 'gpill-partial' : 'gpill-none';
+      const lbl = st.complete ? '✓' : `${st.done}/${st.req}`;
+      return `<td>
+        <span class="gpill ${cls}">${lbl}</span>
+        <div class="mini-bar" style="margin-top:4px;">
+          <div class="mini-fill" style="width:${pct}%;background:${st.complete?'#16a34a':st.stationsOk?'#d97706':'#3b82f6'};"></div>
+        </div>
+      </td>`;
+    }).join('');
+
+    const abgaben = ['Basis','Aufbau','Abflug']
+      .filter(gr => g[gr].abgabe)
+      .map(gr => `<span class="gpill gpill-ok">${gr}</span>`)
+      .join('') || '<span style="color:var(--ink2);font-size:12px;">–</span>';
+
+    const lastActive = s.last_active
+      ? new Date(s.last_active).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+      : '–';
+
+    return `<tr data-name="${s.username}">
+      <td style="font-weight:600;">${s.username}</td>
+      ${groupCells}
+      <td>${abgaben}</td>
+      <td style="color:var(--ink2);">${lastActive}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-icon" onclick="openReset(${s.id},'${s.username}')">🔑</button>
+          <button class="btn-icon red" onclick="deleteStudent(${s.id},'${s.username}')">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('search-inp').value.toLowerCase();
+  const filtered = allStudents.filter(s => s.username.toLowerCase().includes(q));
+  renderTable(filtered);
+}
+
+// ══ Admin actions ═════════════════════════════════════════════════════════════
+function openBulk() {
+  document.getElementById('bulk-txt').value = '';
+  document.getElementById('bulk-msg').innerHTML = '';
+  openModal('modal-bulk');
+}
+
+async function doBulk() {
+  const lines = document.getElementById('bulk-txt').value
+    .split('\n').map(l=>l.trim()).filter(Boolean);
+  const students = lines.map(l => {
+    const [username,...rest] = l.split(',');
+    return { username: username?.trim(), password: rest.join(',').trim() };
+  }).filter(s => s.username && s.password);
+
+  if (!students.length) {
+    showMsg('bulk-msg', 'Keine gültigen Zeilen gefunden.', 'err');
+    return;
+  }
+  const r = await fetch('/api/admin/bulk-create', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ students })
+  });
+  const d = await r.json();
+  if (!r.ok) { showMsg('bulk-msg', d.error, 'err'); return; }
+  showMsg('bulk-msg', `✓ ${d.created} angelegt, ${d.skipped} übersprungen.`, 'ok');
+  setTimeout(() => { closeModal('modal-bulk'); loadStudents(); }, 1500);
+}
+
+function openSingle() {
+  document.getElementById('s-user').value = '';
+  document.getElementById('s-pass').value = '';
+  document.getElementById('single-msg').innerHTML = '';
+  openModal('modal-single');
+}
+
+async function doSingle() {
+  const username = document.getElementById('s-user').value.trim();
+  const password = document.getElementById('s-pass').value;
+  const r = await fetch('/api/admin/create-student', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ username, password })
+  });
+  const d = await r.json();
+  if (!r.ok) { showMsg('single-msg', d.error, 'err'); return; }
+  showMsg('single-msg', `✓ ${username} angelegt.`, 'ok');
+  setTimeout(() => { closeModal('modal-single'); loadStudents(); }, 1200);
+}
+
+function openReset(id, name) {
+  resetId = id;
+  document.getElementById('reset-name').textContent = name;
+  document.getElementById('reset-pw').value = '';
+  document.getElementById('reset-msg').innerHTML = '';
+  openModal('modal-reset');
+}
+
+async function doReset() {
+  const newPassword = document.getElementById('reset-pw').value;
+  const r = await fetch('/api/admin/reset-password', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ userId: resetId, newPassword })
+  });
+  const d = await r.json();
+  if (!r.ok) { showMsg('reset-msg', d.error, 'err'); return; }
+  showMsg('reset-msg', '✓ Passwort geändert.', 'ok');
+  setTimeout(() => closeModal('modal-reset'), 1200);
+}
+
+async function deleteStudent(id, name) {
+  if (!confirm(`${name} wirklich löschen? Alle Fortschrittsdaten gehen verloren.`)) return;
+  const r = await fetch(`/api/admin/student/${id}`, { method:'DELETE' });
+  if (r.ok) loadStudents();
+}
+
+// ══ Change own password ════════════════════════════════════════════════════════
+async function doChangePw() {
+  const oldPw = document.getElementById('cpw-old').value;
+  const newPw = document.getElementById('cpw-new').value;
+  const rep   = document.getElementById('cpw-rep').value;
+  const msg   = document.getElementById('cpw-msg');
+  if (newPw !== rep) { showMsg('cpw-msg','Passwörter stimmen nicht überein.','err'); return; }
+  if (newPw.length < 6) { showMsg('cpw-msg','Mind. 6 Zeichen.','err'); return; }
+  const r = await fetch('/api/change-password', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw })
+  });
+  const d = await r.json();
+  if (!r.ok) { showMsg('cpw-msg', d.error, 'err'); return; }
+  showMsg('cpw-msg','✓ Passwort geändert!','ok');
+  setTimeout(() => showView('lerntheke'), 1500);
+}
+
+// ══ CSV Export ════════════════════════════════════════════════════════════════
+function exportCSV() {
+  const header = 'Name,Pflicht,Basis,Aufbau,Abflug,Basis-Abgabe,Aufbau-Abgabe,Zuletzt aktiv\n';
+  const rows = allStudents.map(s => {
+    const g = parseGroups(s.prog, s.abgabe);
+    return [
+      s.username,
+      g.Pflicht.done+'/'+g.Pflicht.req,
+      g.Basis.done+'/'+g.Basis.req,
+      g.Aufbau.done+'/'+g.Aufbau.req,
+      g.Abflug.done+'/'+g.Abflug.req,
+      g.Basis.abgabe?'ja':'nein',
+      g.Aufbau.abgabe?'ja':'nein',
+      s.last_active||'–'
+    ].join(',');
+  }).join('\n');
+  const blob = new Blob(['\uFEFF'+header+rows], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `lerntheke_${me.klasse}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ══ Helpers ═══════════════════════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.innerHTML = `<div class="msg ${type}">${text}</div>`;
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.overlay').forEach(el =>
+  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); })
+);
+</script>
+</body>
+</html>
