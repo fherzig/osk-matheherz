@@ -376,9 +376,12 @@ const ST_GROUP = [
   'Aufbau',  // 16 London Eye
   'Abflug',  // 17 Ein Seil um die Erde
   'Abflug',  // 18 Hippokrates
+  'Basis',   // 19 Eigene Aufgabe (Basis)
+  'Aufbau',  // 20 Eigene Aufgabe (Aufbau)
+  'Abflug',  // 21 Eigene Aufgabe (Abflug)
 ];
 const G_REQ   = { Pflicht:3, Basis:4, Aufbau:4, Abflug:1 };
-const G_TOTAL = { Pflicht:4, Basis:7, Aufbau:6, Abflug:2 };
+const G_TOTAL = { Pflicht:4, Basis:8, Aufbau:7, Abflug:3 };
 
 function parseGroups(progStr, abgabeStr, korrekturObj) {
   const prog = safeJSON(progStr);
@@ -405,7 +408,7 @@ function parseGroups(progStr, abgabeStr, korrekturObj) {
       abgabe,
       korStatus,
       korOk,
-      complete: cnt >= G_REQ[g] && (g==='Pflicht' || korOk)
+      complete: cnt >= G_REQ[g] && (g==='Pflicht' || (abgabe && korOk))
     };
   });
   return result;
