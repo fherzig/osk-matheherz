@@ -180,30 +180,47 @@ function extractJSValue(html, varName) {
   if (idx === -1) return null;
   const start = idx + marker.length;
   const opener = html[start];
-  if (opener !== '[' && opener !== '{') {
-    // string literal
-    const quote = html[start];
-    const end = html.indexOf(quote, start + 1);
-    return html.slice(start + 1, end);
-  }
-  const closer = opener === '[' ? ']' : '}';
-  let depth = 0, inStr = false, strChar = '', escaped = false, end = start;
-  for (let i = start; i < html.length; i++) {
-    const c = html[i];
-    if (escaped) { escaped = false; continue; }
-    if (inStr) {
-      if (c === '\\') { escaped = true; continue; }
-      if (c === strChar) inStr = false;
-    } else {
-      if (c === '"' || c === "'") { inStr = true; strChar = c; }
-      else if (c === opener) depth++;
-      else if (c === closer) { depth--; if (depth === 0) { end = i; break; } }
+
+  // Quoted string
+  if (opener === '"' || opener === "'") {
+    let i = start + 1;
+    while (i < html.length && html[i] !== opener) {
+      if (html[i] === '\\') i++;
+      i++;
     }
+    return html.slice(start + 1, i);
   }
-  try { return JSON.parse(html.slice(start, end + 1)); } catch { return null; }
+
+  // Array or object – bracket matching
+  if (opener === '[' || opener === '{') {
+    const closer = opener === '[' ? ']' : '}';
+    let depth = 0, inStr = false, strChar = '', escaped = false, end = start;
+    for (let i = start; i < html.length; i++) {
+      const c = html[i];
+      if (escaped) { escaped = false; continue; }
+      if (inStr) {
+        if (c === '\\') { escaped = true; continue; }
+        if (c === strChar) inStr = false;
+      } else {
+        if (c === '"' || c === "'") { inStr = true; strChar = c; }
+        else if (c === opener) depth++;
+        else if (c === closer) { depth--; if (depth === 0) { end = i; break; } }
+      }
+    }
+    try { return JSON.parse(html.slice(start, end + 1)); } catch { return null; }
+  }
+
+  // Number / boolean – read until ; or whitespace
+  let end = start;
+  while (end < html.length && !/[;\s]/.test(html[end])) end++;
+  const raw = html.slice(start, end);
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  const n = Number(raw);
+  return isNaN(n) ? null : n;
 }
 
-const ltMetaCache = {};
+const ltMetaCache = {}; // cleared on server restart
 
 function getLerntheckenMeta() {
   const dir = path.join(__dirname, 'public', 'lerntheken');
@@ -220,7 +237,8 @@ function getLerntheckenMeta() {
       const meta      = extractJSValue(html, 'META');
       // strip task/sol HTML from meta to keep response small
       const stations  = (meta || []).map(s => ({ id: s.id, group: s.group, title: s.title }));
-      const title     = (html.match(/<title>([^<]+)<\/title>/) || [])[1] || id;
+      const rawTitle  = (html.match(/<title>([^<]+)<\/title>/) || [])[1] || id;
+      const title     = rawTitle.replace(/\s*·.*$/, '').trim(); // strip " · Jahrgangsstufe X"
       const result = { id, title, url: `/lerntheken/${f}`, key, abgabeKey, total, groups, stations };
       ltMetaCache[id] = result;
       return result;
@@ -243,6 +261,8 @@ app.get('/api/admin/students', requireAdmin, async (req, res) => {
          FROM progress WHERE user_id=u.id) AS all_progress,
         (SELECT json_build_object('key', key, 'updated_at', updated_at)
          FROM progress WHERE user_id=u.id
+           AND key NOT LIKE 'lerntheke_inputs_%'
+           AND key NOT LIKE '%_abgabe_%'
          ORDER BY updated_at DESC LIMIT 1) AS last_active_info,
         (SELECT json_object_agg(gruppe, json_build_object('status',status,'notiz',notiz))
          FROM korrektur WHERE user_id=u.id) AS korrektur
@@ -333,7 +353,9 @@ app.delete('/api/admin/student/:id', requireAdmin, async (req, res) => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function safeJSON(s) {
-  try { return s ? JSON.parse(s) : {}; } catch { return {}; }
+  if (!s) return {};
+  if (typeof s === 'object') return s; // pg already parsed JSON columns
+  try { return JSON.parse(s); } catch { return {}; }
 }
 
 

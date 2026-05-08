@@ -457,10 +457,13 @@ async function loadLerntheken() {
     const lastUrl = localStorage.getItem('lastLerntheke') || list[0].url;
     const validUrl = list.find(l => l.url === lastUrl) ? lastUrl : list[0].url;
     sel.value = validUrl;
+    if (me && me.role !== 'admin') frame.onload = syncProgressToFrame;
     frame.src = validUrl + '?v=' + Date.now();
   } catch(e) {
     // Fallback
-    document.getElementById('lerntheke-frame').src = '/lerntheken/kreise-und-zylinder.html';
+    const frame = document.getElementById('lerntheke-frame');
+    if (me && me.role !== 'admin') frame.onload = syncProgressToFrame;
+    frame.src = '/lerntheken/kreise-und-zylinder.html';
   }
 }
 
@@ -510,6 +513,17 @@ async function startLerntheke(url) {
   frame.onload = syncProgressToFrame;
   frame.src = url + '?v=' + Date.now();
   localStorage.setItem('lastLerntheke', url);
+
+  // Show/update the dropdown for students when multiple lerntheken exist
+  if (ltMeta.length > 1 && me && me.role !== 'admin') {
+    const picker = document.getElementById('lt-picker');
+    const sel    = document.getElementById('lt-select');
+    sel.innerHTML = ltMeta.map(l =>
+      `<option value="${l.url}"${l.url === url ? ' selected' : ''}>${l.title}</option>`
+    ).join('');
+    sel.onchange = () => startLerntheke(sel.value);
+    picker.style.display = 'flex';
+  }
 }
 
 async function doLogin() {
@@ -535,11 +549,18 @@ async function doLogin() {
 }
 
 async function doLogout() {
-  await fetch('/api/logout', { method:'POST' });
-  // Clear lerntheke keys from localStorage so next user starts clean
-  Object.keys(localStorage)
-    .filter(k => k.startsWith('lerntheke_'))
-    .forEach(k => localStorage.removeItem(k));
+  // Save all lerntheke progress to server BEFORE clearing localStorage
+  const ltKeys = Object.keys(localStorage).filter(k => k.startsWith('lerntheke_'));
+  await Promise.all(ltKeys.map(k => {
+    const v = localStorage.getItem(k);
+    if (!v) return Promise.resolve();
+    return fetch('/api/progress', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: k, value: v })
+    }).catch(() => {});
+  }));
+  await fetch('/api/logout', { method: 'POST' });
+  ltKeys.forEach(k => localStorage.removeItem(k));
   me = null;
   location.reload();
 }
@@ -588,9 +609,14 @@ async function syncProgressToFrame() {
     const data = await r.json();
     const frame = document.getElementById('lerntheke-frame');
     if (!frame.contentWindow) return;
-    // Always inject - even empty data triggers unlock of saves
+    // Inject server data, but don't overwrite non-empty localStorage with empty server values
     Object.entries(data).forEach(([k, v]) => {
-      frame.contentWindow.localStorage.setItem(k, v);
+      const isEmpty = !v || v === '[]' || v === '{}';
+      const existing = frame.contentWindow.localStorage.getItem(k);
+      const existingEmpty = !existing || existing === '[]' || existing === '{}';
+      if (!isEmpty || existingEmpty) {
+        frame.contentWindow.localStorage.setItem(k, v);
+      }
     });
     // Signal iframe: server data is ready, unlock saves
     frame.contentWindow.postMessage({ type: 'RELOAD_PROGRESS' }, '*');
@@ -663,7 +689,11 @@ async function loadStudents() {
       const lt = ltMeta[0];
       const statCards = lt ? Object.entries(lt.groups).map(([g, grp]) => {
         const n = allStudents.filter(s => {
-          const ap = s.all_progress || {};
+          let ap = s.all_progress || {};
+          if (!s.all_progress) {
+            if (s.prog   != null) ap[lt.key]       = typeof s.prog   === 'string' ? s.prog   : JSON.stringify(s.prog);
+            if (s.abgabe != null) ap[lt.abgabeKey] = typeof s.abgabe === 'string' ? s.abgabe : JSON.stringify(s.abgabe);
+          }
           const gd = parseGroupsForLt(lt, ap[lt.key], ap[lt.abgabeKey], s.korrektur);
           return gd[g] && gd[g].complete;
         }).length;
@@ -701,7 +731,12 @@ function renderTable(students) {
   }
 
   tbody.innerHTML = students.map(s => {
-    const ap  = s.all_progress || {};
+    // Support both new format (all_progress) and old server format (prog/abgabe)
+    let ap = s.all_progress || {};
+    if (!s.all_progress && lt) {
+      if (s.prog   != null) ap[lt.key]       = typeof s.prog   === 'string' ? s.prog   : JSON.stringify(s.prog);
+      if (s.abgabe != null) ap[lt.abgabeKey] = typeof s.abgabe === 'string' ? s.abgabe : JSON.stringify(s.abgabe);
+    }
     const kor = s.korrektur || {};
 
     // Per-lerntheke group stats
@@ -915,6 +950,15 @@ async function viewStudent(userId, username) {
         frame.contentWindow.localStorage.setItem(k, v);
       });
       frame.contentWindow.postMessage({ type: 'RELOAD_PROGRESS' }, '*');
+
+      // Inject student's korrektur so the lerntheke preview shows correct badges
+      try {
+        const kr = await fetch('/api/admin/korrektur/' + userId);
+        if (kr.ok) {
+          const korrData = await kr.json();
+          frame.contentWindow.postMessage({ type: 'RELOAD_KORREKTUR', data: korrData }, '*');
+        }
+      } catch {}
 
       // Show banner
       showStudentBanner(username);
