@@ -286,7 +286,7 @@ textarea.form-input{resize:vertical;min-height:130px;font-family:monospace;font-
       <button class="btn-act btn-green" onclick="openBulk()">+ Bulk anlegen</button>
       <button class="btn-act btn-outline" onclick="openSingle()">+ Einzeln anlegen</button>
       <button class="btn-act btn-outline" id="btn-view-toggle" onclick="toggleAdminView()">📊 Baustein-Übersicht</button>
-      <button class="btn-act btn-outline" onclick="exportCSV()">↓ CSV</button>
+<button class="btn-act btn-outline" onclick="exportCSV()">↓ CSV</button>
       <button class="btn-act btn-outline" onclick="loadStudents()">↺ Laden</button>
     </div>
     <div class="tbl-wrap">
@@ -405,6 +405,23 @@ let resetId = null;
 // Lerntheke metadata – loaded dynamically from /api/lerntheken-meta
 let ltMeta = [];
 let adminViewMode = 'groups'; // 'groups' | 'matrix'
+
+async function syncStations() {
+  if (!ltMeta.length) return;
+  const btn = document.getElementById('btn-sync');
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '⟳ Synchronisiere…';
+  const results = [];
+  for (const lt of ltMeta) {
+    const r = await fetch(`/api/admin/sync-stations/${lt.id}`, { method: 'POST' });
+    const d = await r.json();
+    results.push(r.ok ? `${lt.title}: ${d.stations} Stationen ✓` : `${lt.title}: ${d.error}`);
+  }
+  btn.disabled = false; btn.textContent = orig;
+  Object.keys(ltMetaCache || {}).forEach(k => delete ltMetaCache[k]);
+  ltMeta = []; // force reload on next admin open
+  alert('Sync abgeschlossen:\n' + results.join('\n'));
+}
 
 function toggleAdminView() {
   adminViewMode = adminViewMode === 'groups' ? 'matrix' : 'groups';

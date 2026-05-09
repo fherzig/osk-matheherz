@@ -70,6 +70,67 @@ async function initDB() {
     `, [a.username, hash, a.klasse]);
   }
   console.log('✓ Datenbank bereit');
+
+  // Auto-sync stations from JSON files into HTML on every startup
+  await syncAllStations();
+}
+
+async function syncAllStations() {
+  const dir = path.join(__dirname, 'public', 'lerntheken', 'stations');
+  if (!fs.existsSync(dir)) return;
+  for (const lernthekeId of fs.readdirSync(dir)) {
+    const data = readStationsDir(lernthekeId);
+    if (!data) continue;
+    const htmlPath = path.join(__dirname, 'public', 'lerntheken', `${lernthekeId}.html`);
+    if (!fs.existsSync(htmlPath)) continue;
+    try {
+      const maxId = data.stations.reduce((m, s) => Math.max(m, s.id), -1);
+      const meta    = Array(maxId + 1).fill(null);
+      const content = Array(maxId + 1).fill(null);
+      data.stations.forEach(s => {
+        const { task_html, sol_html, ...m } = s;
+        meta[s.id]    = m;
+        content[s.id] = { task_html: task_html || '', sol_html: sol_html || '', hilfen: s.hilfen || [] };
+      });
+      const groups = JSON.parse(JSON.stringify(data.groups));
+      Object.keys(groups).forEach(g => {
+        groups[g].total = data.stations.filter(s => s.group === g).length;
+      });
+      let html = fs.readFileSync(htmlPath, 'utf8');
+      html = replaceJsConstant(html, 'TOTAL',   String(data.stations.length));
+      html = replaceJsConstant(html, 'GROUPS',  JSON.stringify(groups));
+      html = replaceJsConstant(html, 'META',    JSON.stringify(meta));
+      html = replaceJsConstant(html, 'CONTENT', JSON.stringify(content));
+      if (data.hilfen && data.hilfen.length)
+        html = replaceJsConstant(html, 'HILFEN', JSON.stringify(data.hilfen));
+      fs.writeFileSync(htmlPath, html, 'utf8');
+
+      // Orphan cleanup
+      const ltKey = extractJSValue(html, 'KEY');
+      if (ltKey) {
+        const existingIds = new Set(data.stations.map(s => s.id));
+        const users = await pool.query(`SELECT user_id, value FROM progress WHERE key=$1`, [ltKey]);
+        for (const row of users.rows) {
+          try {
+            const arr = JSON.parse(row.value);
+            if (!Array.isArray(arr)) continue;
+            const filtered = arr.filter(id => existingIds.has(Number(id)));
+            if (filtered.length !== arr.length)
+              await pool.query(`UPDATE progress SET value=$1, updated_at=NOW() WHERE user_id=$2 AND key=$3`,
+                [JSON.stringify(filtered), row.user_id, ltKey]);
+          } catch {}
+        }
+        const inputs = await pool.query(`SELECT user_id, key FROM progress WHERE key LIKE 'lerntheke_inputs_%'`);
+        for (const row of inputs.rows) {
+          const stId = parseInt(row.key.replace('lerntheke_inputs_', ''), 10);
+          if (!isNaN(stId) && !existingIds.has(stId))
+            await pool.query(`DELETE FROM progress WHERE user_id=$1 AND key=$2`, [row.user_id, row.key]);
+        }
+      }
+      delete ltMetaCache[lernthekeId];
+      console.log(`✓ Sync: ${lernthekeId} (${data.stations.length} Stationen)`);
+    } catch(e) { console.warn(`⚠ Sync fehlgeschlagen für ${lernthekeId}: ${e.message}`); }
+  }
 }
 
 // ── Middleware ────────────────────────────────────────────────────────────────
@@ -156,6 +217,133 @@ app.post('/api/progress', requireLogin, async (req, res) => {
     `, [req.session.userId, key, String(value)]);
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: 'Serverfehler' }); }
+});
+
+// ── Stations (JSON-file-based) ────────────────────────────────────────────────
+const STATIONS_DIR = path.join(__dirname, 'public', 'lerntheken', 'stations');
+
+function readStationsDir(lernthekeId) {
+  const dir = path.join(STATIONS_DIR, lernthekeId);
+  if (!fs.existsSync(dir)) return null;
+  const config = safeJSON(fs.readFileSync(path.join(dir, '_config.json'), 'utf8'));
+  const stations = fs.readdirSync(dir)
+    .filter(f => f.endsWith('.json') && f !== '_config.json')
+    .map(f => safeJSON(fs.readFileSync(path.join(dir, f), 'utf8')))
+    .filter(Boolean)
+    .sort((a, b) => a.id - b.id);
+  return { ...config, stations };
+}
+
+function replaceJsConstant(html, varName, newValue) {
+  const marker = `const ${varName}=`;
+  const idx = html.indexOf(marker);
+  if (idx === -1) return html;
+  const after = html.slice(idx + marker.length);
+  const opener = after[0];
+  if (opener !== '[' && opener !== '{') {
+    // number / bool – replace until ;
+    const end = after.search(/[;\s]/);
+    return html.slice(0, idx + marker.length) + newValue + after.slice(end);
+  }
+  const closer = opener === '[' ? ']' : '}';
+  let depth = 0, inStr = false, strChar = '', esc = false, end = 0;
+  for (let i = 0; i < after.length; i++) {
+    const c = after[i];
+    if (esc) { esc = false; continue; }
+    if (inStr) { if (c === '\\') { esc = true; continue; } if (c === strChar) inStr = false; }
+    else { if (c === '"' || c === "'") { inStr = true; strChar = c; } else if (c === opener) depth++; else if (c === closer) { depth--; if (depth === 0) { end = i; break; } } }
+  }
+  return html.slice(0, idx + marker.length) + newValue + after.slice(end + 1);
+}
+
+// GET /api/stations/:lerntheke – serve station data from JSON files
+app.get('/api/stations/:lerntheke', requireLogin, (req, res) => {
+  const data = readStationsDir(req.params.lerntheke);
+  if (!data) return res.status(404).json({ error: 'Nicht gefunden' });
+  res.json(data);
+});
+
+// POST /api/admin/sync-stations/:lerntheke – write JSON files back into HTML
+app.post('/api/admin/sync-stations/:lerntheke', requireAdmin, async (req, res) => {
+  try {
+    const id = req.params.lerntheke;
+    const data = readStationsDir(id);
+    if (!data) return res.status(404).json({ error: 'Stations-Ordner nicht gefunden' });
+
+    const htmlPath = path.join(__dirname, 'public', 'lerntheken', `${id}.html`);
+    if (!fs.existsSync(htmlPath)) return res.status(404).json({ error: 'HTML-Datei nicht gefunden' });
+
+    // Build dense arrays indexed by station id
+    const maxId = data.stations.reduce((m, s) => Math.max(m, s.id), -1);
+    const meta    = Array(maxId + 1).fill(null);
+    const content = Array(maxId + 1).fill(null);
+    data.stations.forEach(s => {
+      const { task_html, sol_html, ...m } = s;
+      meta[s.id]    = m;
+      content[s.id] = { task_html: task_html || '', sol_html: sol_html || '', hilfen: s.hilfen || [] };
+    });
+    // Keep sparse array (nulls for deleted IDs) so META[id] addressing stays correct
+    const metaClean    = meta;
+    const contentClean = content;
+
+    // Update GROUPS totals from actual station counts
+    const groups = JSON.parse(JSON.stringify(data.groups));
+    Object.keys(groups).forEach(g => {
+      groups[g].total = data.stations.filter(s => s.group === g).length;
+    });
+
+    let html = fs.readFileSync(htmlPath, 'utf8');
+    html = replaceJsConstant(html, 'TOTAL',   String(metaClean.length));
+    html = replaceJsConstant(html, 'GROUPS',  JSON.stringify(groups));
+    html = replaceJsConstant(html, 'META',    JSON.stringify(metaClean));
+    html = replaceJsConstant(html, 'CONTENT', JSON.stringify(contentClean));
+    if (data.hilfen && data.hilfen.length) {
+      html = replaceJsConstant(html, 'HILFEN', JSON.stringify(data.hilfen));
+    }
+
+    fs.writeFileSync(htmlPath, html, 'utf8');
+    delete ltMetaCache[id]; // invalidate metadata cache
+
+    // ── Orphan cleanup: remove progress for deleted station IDs ──────────────
+    const existingIds = new Set(data.stations.map(s => s.id));
+    // Read KEY dynamically from the (just-updated) HTML file
+    const freshHtml = fs.readFileSync(htmlPath, 'utf8');
+    const ltKey = extractJSValue(freshHtml, 'KEY');
+
+    // Get all users who have progress for this lerntheke
+    const users = await pool.query(
+      `SELECT user_id, value FROM progress WHERE key = $1`, [ltKey]
+    );
+    let cleaned = 0;
+    for (const row of users.rows) {
+      try {
+        const doneArr = JSON.parse(row.value);
+        if (!Array.isArray(doneArr)) continue;
+        const filtered = doneArr.filter(stId => existingIds.has(Number(stId)));
+        if (filtered.length !== doneArr.length) {
+          await pool.query(
+            `UPDATE progress SET value=$1, updated_at=NOW() WHERE user_id=$2 AND key=$3`,
+            [JSON.stringify(filtered), row.user_id, ltKey]
+          );
+          cleaned++;
+        }
+      } catch {}
+    }
+
+    // Delete orphaned input entries (lerntheke_inputs_{stationId})
+    const inputPattern = `lerntheke_inputs_%`;
+    const inputRows = await pool.query(
+      `SELECT user_id, key FROM progress WHERE key LIKE $1`, [inputPattern]
+    );
+    for (const row of inputRows.rows) {
+      const stId = parseInt(row.key.replace('lerntheke_inputs_', ''), 10);
+      if (!isNaN(stId) && !existingIds.has(stId)) {
+        await pool.query(`DELETE FROM progress WHERE user_id=$1 AND key=$2`, [row.user_id, row.key]);
+      }
+    }
+
+    res.json({ ok: true, stations: data.stations.length, progressCleaned: cleaned });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── Lerntheken list ───────────────────────────────────────────────────────────

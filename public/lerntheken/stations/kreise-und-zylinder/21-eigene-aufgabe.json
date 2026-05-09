@@ -1,0 +1,12 @@
+{
+  "id": 21,
+  "title": "Eigene Aufgabe",
+  "hilfen": [],
+  "hasSol": false,
+  "group": "Abflug",
+  "gc": "#7c3aed",
+  "gbg": "#f5f3ff",
+  "gbr": "#ddd6fe",
+  "task_html": "<div style=\"display:flex;justify-content:center;margin-bottom:18px;\">\n<svg viewBox=\"0 0 240 148\" xmlns=\"http://www.w3.org/2000/svg\" style=\"width:min(240px,100%);max-height:148px;\">\n  <circle cx=\"88\"  cy=\"90\" r=\"48\" fill=\"#f5f3ff\" fill-opacity=\".85\" stroke=\"#7c3aed\" stroke-width=\"2\"/>\n  <circle cx=\"152\" cy=\"90\" r=\"48\" fill=\"#fdf2f8\" fill-opacity=\".85\" stroke=\"#9333ea\" stroke-width=\"2\"/>\n  <circle cx=\"120\" cy=\"44\" r=\"48\" fill=\"#fef9c3\" fill-opacity=\".85\" stroke=\"#d97706\" stroke-width=\"2\"/>\n  <text x=\"70\"  y=\"108\" text-anchor=\"middle\" font-size=\"22\" fill=\"#7c3aed\">★</text>\n  <text x=\"170\" y=\"108\" text-anchor=\"middle\" font-size=\"22\" fill=\"#9333ea\">★</text>\n  <text x=\"120\" y=\"28\"  text-anchor=\"middle\" font-size=\"22\" fill=\"#d97706\">★</text>\n  <text x=\"120\" y=\"84\"  text-anchor=\"middle\" font-size=\"18\" fill=\"#1c1a16\" font-weight=\"bold\" font-family=\"monospace\">?</text>\n  <text x=\"120\" y=\"142\" text-anchor=\"middle\" font-size=\"9\"  fill=\"#706b62\" font-family=\"monospace\">Knobeln &amp; Entdecken</text>\n</svg></div>\n<div class=\"task-block\" style=\"background:#7c3aed18;border:1.5px solid #7c3aed40;margin:0 0 14px 0;\">\n  <div class=\"task-block-label\" style=\"color:#7c3aed;\">Eigene Knobelaufgabe – Abflug ★</div>\n  <p style=\"font-size:14px;margin:0;line-height:1.7;\">Erfinde eine echte <strong>Knobelaufgabe</strong> zum Thema Kreise – eine, bei der man wirklich nachdenken muss! Die Aufgabe darf auch ungewöhnlich sein oder überraschende Ergebnisse haben. Notiere Aufgabenstellung <em>und</em> vollständigen Lösungsweg.<br><br>📄 <strong>Schreib deine Aufgabe und die Lösung jeweils auf ein Blatt Papier und gib beides bei deiner Lernbegleitung ab.</strong></p>\n</div>",
+  "sol_html": null
+}
