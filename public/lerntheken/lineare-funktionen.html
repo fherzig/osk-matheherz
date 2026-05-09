@@ -164,9 +164,19 @@ function groupStats(){
 }
 
 function updProg(){
-  const n=done.size;
-  document.getElementById('prog-lbl').textContent=n+' / '+TOTAL;
-  document.getElementById('prog-fill').style.width=(TOTAL?n/TOTAL*100:0)+'%';
+  const stats=groupStats();
+  let steps=0,total=0;
+  GROUP_ORDER.forEach(g=>{
+    const st=stats[g];
+    steps+=Math.min(st.done,st.req); total+=st.req;
+    if(g!=='Pflicht'){
+      if(st.abgabeOk)steps++;total++;
+      if(st.korOk&&st.abgabeOk)steps++;total++;
+    }
+  });
+  const pct=total?Math.round(steps/total*100):0;
+  document.getElementById('prog-lbl').textContent=pct+' %';
+  document.getElementById('prog-fill').style.width=pct+'%';
 }
 
 function buildReqCards(stats){
