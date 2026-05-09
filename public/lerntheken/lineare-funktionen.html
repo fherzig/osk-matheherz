@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="/lerntheken/lerntheke.css">
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Baustein Lineare Funktionen · Jahrgangsstufe 9</title>
 </head>
@@ -16,7 +16,7 @@
     <span class="bar-sub">Jahrgangsstufe 9</span>
   </div>
   <div class="bar-right">
-    <span class="prog-lbl" id="prog-lbl">0 / 0</span>
+    <span class="prog-lbl" id="prog-lbl">0 %</span>
     <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
   </div>
 </div>
@@ -40,21 +40,47 @@
   </div>
 </div>
 
+<div class="view" id="view-st">
+  <div class="inner">
+    <div class="st-top" id="st-top-bar">
+      <button class="btn-back" onclick="showOv()">← Übersicht</button>
+      <span class="st-badge" id="st-badge"></span>
+      <span class="st-title" id="st-title"></span>
+    </div>
+    <div id="st-body" class="st-body"></div>
+    <div style="margin-top:16px;">
+      <button class="btn-done" id="btn-done" onclick="toggleDone()">Als erledigt markieren</button>
+    </div>
+    <div id="hilfe-strip" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+      <div id="hilfe-btns" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-h">
+  <div class="inner">
+    <div class="st-top">
+      <button class="btn-back" id="btn-back-h">← Zurück</button>
+      <span id="hv-title" style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;"></span>
+    </div>
+    <div class="panel" id="hilfe-card"></div>
+  </div>
+</div>
+
 <script>
 const KEY='lerntheke_lf_v1';
 const ABGABE_KEY='lerntheke_lf_abgabe_v1';
-const TOTAL=0;
-const GROUPS={"Pflicht":{"color":"#d95f2b","bg":"#fff7f4","border":"#fcd9c8","required":3,"total":0,"emoji":"🔴","desc":"Pflichtaufgaben – Grundlage für alles"},"Basis":{"color":"#2563eb","bg":"#eff6ff","border":"#bfdbfe","required":4,"total":0,"emoji":"🔵","desc":"Grundlegende Aufgaben – 4 von ? wählen"},"Aufbau":{"color":"#16a34a","bg":"#f0fdf4","border":"#bbf7d0","required":4,"total":0,"emoji":"🟢","desc":"Vertiefung & Anwendung – 4 von ? wählen"},"Abflug":{"color":"#7c3aed","bg":"#f5f3ff","border":"#ddd6fe","required":1,"total":0,"emoji":"🟣","desc":"Knobeln & Entdecken – 1 von ? wählen"}};
-const GROUP_ORDER=["Pflicht","Basis","Aufbau","Abflug"];
-const META=[];
-const CONTENT=[];
+let TOTAL=9;
+let GROUPS={"Pflicht":{"color":"#d95f2b","bg":"#fff7f4","border":"#fcd9c8","required":3,"total":3,"emoji":"🔴","desc":"Pflichtaufgaben – Grundlage für alles"},"Basis":{"color":"#2563eb","bg":"#eff6ff","border":"#bfdbfe","required":4,"total":6,"emoji":"🔵","desc":"Grundlegende Aufgaben – 4 von 6 wählen"},"Aufbau":{"color":"#16a34a","bg":"#f0fdf4","border":"#bbf7d0","required":4,"total":0,"emoji":"🟢","desc":"Vertiefung & Anwendung – 4 von ? wählen"},"Abflug":{"color":"#7c3aed","bg":"#f5f3ff","border":"#ddd6fe","required":1,"total":0,"emoji":"🟣","desc":"Knobeln & Entdecken – 1 von ? wählen"}};
+let GROUP_ORDER=["Pflicht","Basis","Aufbau","Abflug"];
+let META=[{"id":0,"title":"Funktionsbegriff","group":"Pflicht","gc":"#d95f2b","gbg":"#fff7f4","gbr":"#fcd9c8","hilfen":[],"hasSol":true},{"id":1,"title":"Steigung","group":"Pflicht","gc":"#d95f2b","gbg":"#fff7f4","gbr":"#fcd9c8","hilfen":[],"hasSol":true},{"id":2,"title":"Geradengleichung y = mx + b","group":"Pflicht","gc":"#d95f2b","gbg":"#fff7f4","gbr":"#fcd9c8","hilfen":[],"hasSol":true},{"id":3,"title":"Wertetabelle &amp; Graph","group":"Basis","gc":"#2563eb","gbg":"#eff6ff","gbr":"#bfdbfe","hilfen":[],"hasSol":true},{"id":4,"title":"Steigung aus zwei Punkten","group":"Basis","gc":"#2563eb","gbg":"#eff6ff","gbr":"#bfdbfe","hilfen":[],"hasSol":true},{"id":5,"title":"Gleichung aus Graph ablesen","group":"Basis","gc":"#2563eb","gbg":"#eff6ff","gbr":"#bfdbfe","hilfen":[],"hasSol":true},{"id":6,"title":"Gleichung aus zwei Punkten","group":"Basis","gc":"#2563eb","gbg":"#eff6ff","gbr":"#bfdbfe","hilfen":[],"hasSol":true},{"id":7,"title":"Nullstellen bestimmen","group":"Basis","gc":"#2563eb","gbg":"#eff6ff","gbr":"#bfdbfe","hilfen":[],"hasSol":true},{"id":8,"title":"Sachproblem: Taxifahrt","group":"Basis","gc":"#2563eb","gbg":"#eff6ff","gbr":"#bfdbfe","hilfen":[],"hasSol":true}];
+let CONTENT=[{"task_html":"<a href=\"https://www.youtube.com/watch?v=WSbu3U3gB2M\" target=\"_blank\" class=\"video-link-card\" style=\"margin-bottom:16px;\">\n  <div class=\"video-link-icon\">&#x25B6;</div>\n  <div class=\"video-link-text\">\n    <div class=\"video-link-title\">Was ist eine Funktion?</div>\n    <div class=\"video-link-sub\">YouTube &middot; Einf&#xFC;hrung in den Funktionsbegriff</div>\n  </div>\n  <div class=\"video-link-arrow\">&#x2197;</div>\n</a>\n\n<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Info: Funktion &amp; Wertetabelle</div>\n  <p style=\"font-size:14px;line-height:1.7;margin:0 0 8px 0;\">Eine <strong>Funktion</strong> ordnet jedem x-Wert genau einen y-Wert zu. Die Zuordnungsvorschrift hei&#xDF;t <strong>Funktionsgleichung</strong>, z.&nbsp;B.:</p>\n  <p style=\"text-align:center;font-size:16px;font-weight:800;font-family:'DM Mono',monospace;margin:8px 0;\">f(x) = x + 2</p>\n  <p style=\"font-size:14px;line-height:1.7;margin:0;\">Damit berechnest du: f(1) = 1 + 2 = <strong>3</strong> &nbsp;|&nbsp; f(&minus;2) = &minus;2 + 2 = <strong>0</strong></p>\n</div>\n\n<p style=\"font-size:14px;margin:14px 0 8px 0;\"><strong>Aufgabe:</strong> F&#xFC;lle die Wertetabelle f&#xFC;r <strong>f(x) = x + 2</strong> aus.</p>\n\n<div class=\"tbl-wrap\">\n  <table>\n    <thead><tr><th style=\"background:#d95f2b;\">x</th><th style=\"background:#d95f2b;\">&minus;2</th><th style=\"background:#d95f2b;\">&minus;1</th><th style=\"background:#d95f2b;\">0</th><th style=\"background:#d95f2b;\">1</th><th style=\"background:#d95f2b;\">2</th><th style=\"background:#d95f2b;\">3</th><th style=\"background:#d95f2b;\">4</th></tr></thead>\n    <tbody>\n      <tr>\n        <td class=\"row-label\">f(x)</td>\n        <td><input class=\"cell-input\" data-ans=\"0\" placeholder=\"?\"></td>\n        <td><input class=\"cell-input\" data-ans=\"1\" placeholder=\"?\"></td>\n        <td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"?\"></td>\n        <td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"?\"></td>\n        <td><input class=\"cell-input\" data-ans=\"4\" placeholder=\"?\"></td>\n        <td><input class=\"cell-input\" data-ans=\"5\" placeholder=\"?\"></td>\n        <td><input class=\"cell-input\" data-ans=\"6\" placeholder=\"?\"></td>\n      </tr>\n    </tbody>\n  </table>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(0)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(0)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-0\"></span>\n</div>","sol_html":"<div style=\"font-family:'DM Mono',monospace;font-size:13px;line-height:2;\">\n  f(&minus;2)=<strong>0</strong> &nbsp;|&nbsp; f(&minus;1)=<strong>1</strong> &nbsp;|&nbsp; f(0)=<strong>2</strong> &nbsp;|&nbsp; f(1)=<strong>3</strong> &nbsp;|&nbsp; f(2)=<strong>4</strong> &nbsp;|&nbsp; f(3)=<strong>5</strong> &nbsp;|&nbsp; f(4)=<strong>6</strong>\n</div>","hilfen":[]},{"task_html":"<a href=\"https://www.youtube.com/watch?v=fGi3XPMnSVA\" target=\"_blank\" class=\"video-link-card\" style=\"margin-bottom:16px;\">\n  <div class=\"video-link-icon\">&#x25B6;</div>\n  <div class=\"video-link-text\">\n    <div class=\"video-link-title\">Steigung berechnen</div>\n    <div class=\"video-link-sub\">YouTube &middot; Steigungsdreieck und Steigungsformel</div>\n  </div>\n  <div class=\"video-link-arrow\">&#x2197;</div>\n</a>\n\n<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Info: Steigungsdreieck</div>\n  <div style=\"display:flex;align-items:center;gap:20px;flex-wrap:wrap;\">\n    <svg viewBox=\"0 0 180 120\" style=\"width:160px;flex-shrink:0;\" xmlns=\"http://www.w3.org/2000/svg\">\n      <line x1=\"20\" y1=\"90\" x2=\"160\" y2=\"90\" stroke=\"#94a3b8\" stroke-width=\"1\"/>\n      <line x1=\"20\" y1=\"10\" x2=\"20\" y2=\"90\" stroke=\"#94a3b8\" stroke-width=\"1\"/>\n      <line x1=\"30\" y1=\"80\" x2=\"150\" y2=\"20\" stroke=\"#2563eb\" stroke-width=\"2.5\"/>\n      <line x1=\"30\" y1=\"80\" x2=\"150\" y2=\"80\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-dasharray=\"4,3\"/>\n      <line x1=\"150\" y1=\"20\" x2=\"150\" y2=\"80\" stroke=\"#16a34a\" stroke-width=\"2\" stroke-dasharray=\"4,3\"/>\n      <text x=\"88\" y=\"96\" text-anchor=\"middle\" font-size=\"11\" fill=\"#dc2626\" font-family=\"monospace\" font-weight=\"bold\">Δx</text>\n      <text x=\"158\" y=\"54\" text-anchor=\"start\" font-size=\"11\" fill=\"#16a34a\" font-family=\"monospace\" font-weight=\"bold\">Δy</text>\n      <text x=\"55\" y=\"42\" font-size=\"11\" fill=\"#2563eb\" font-family=\"monospace\">m = Δy/Δx</text>\n    </svg>\n    <div style=\"font-size:14px;line-height:1.8;\">\n      <strong>Steigung m</strong> = H&#xF6;henunterschied &divide; Streckenunterschied<br>\n      <span style=\"font-family:'DM Mono',monospace;font-size:16px;font-weight:800;\">m = &Delta;y / &Delta;x</span>\n    </div>\n  </div>\n</div>\n\n<p style=\"font-size:14px;margin:14px 0 8px 0;\"><strong>Aufgabe:</strong> Berechne die Steigung m.</p>\n\n<div class=\"tbl-wrap\">\n  <table>\n    <thead><tr><th style=\"background:#d95f2b;\">&Delta;y (H&#xF6;he)</th><th style=\"background:#d95f2b;\">&Delta;x (Strecke)</th><th style=\"background:#d95f2b;\">Steigung m</th></tr></thead>\n    <tbody>\n      <tr><td class=\"given\">3</td><td class=\"given\">6</td><td><input class=\"cell-input\" data-ans=\"0.5\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">4</td><td class=\"given\">2</td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">&minus;3</td><td class=\"given\">6</td><td><input class=\"cell-input\" data-ans=\"-0.5\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">5</td><td class=\"given\">4</td><td><input class=\"cell-input\" data-ans=\"1.25\" placeholder=\"?\"></td></tr>\n    </tbody>\n  </table>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(1)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(1)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-1\"></span>\n</div>","sol_html":"<div style=\"font-family:'DM Mono',monospace;font-size:13px;line-height:2.2;\">\n  3&divide;6 = <strong>0,5</strong> &nbsp;|&nbsp; 4&divide;2 = <strong>2</strong> &nbsp;|&nbsp; &minus;3&divide;6 = <strong>&minus;0,5</strong> &nbsp;|&nbsp; 5&divide;4 = <strong>1,25</strong>\n</div>","hilfen":[]},{"task_html":"<a href=\"https://www.youtube.com/watch?v=3Ifbc736yfY\" target=\"_blank\" class=\"video-link-card\" style=\"margin-bottom:16px;\">\n  <div class=\"video-link-icon\">&#x25B6;</div>\n  <div class=\"video-link-text\">\n    <div class=\"video-link-title\">Zuordnungsvorschrift f&#xFC;r Geraden</div>\n    <div class=\"video-link-sub\">YouTube &middot; y = mx + b verstehen und anwenden</div>\n  </div>\n  <div class=\"video-link-arrow\">&#x2197;</div>\n</a>\n\n<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Info: y = mx + b</div>\n  <div style=\"display:flex;align-items:center;gap:20px;flex-wrap:wrap;\">\n    <svg viewBox=\"0 0 160 140\" style=\"width:130px;flex-shrink:0;\" xmlns=\"http://www.w3.org/2000/svg\">\n      <line x1=\"10\" y1=\"70\" x2=\"150\" y2=\"70\" stroke=\"#94a3b8\" stroke-width=\"1\"/>\n      <line x1=\"80\" y1=\"10\" x2=\"80\" y2=\"130\" stroke=\"#94a3b8\" stroke-width=\"1\"/>\n      <line x1=\"20\" y1=\"110\" x2=\"145\" y2=\"30\" stroke=\"#2563eb\" stroke-width=\"2.5\"/>\n      <circle cx=\"80\" cy=\"64\" r=\"4\" fill=\"#d97706\"/>\n      <text x=\"84\" y=\"60\" font-size=\"10\" fill=\"#d97706\" font-family=\"monospace\" font-weight=\"bold\">b</text>\n      <text x=\"95\" y=\"44\" font-size=\"10\" fill=\"#2563eb\" font-family=\"monospace\">m = Steigung</text>\n    </svg>\n    <div style=\"font-size:14px;line-height:1.8;\">\n      <span style=\"font-family:'DM Mono',monospace;font-size:16px;font-weight:800;\">y = mx + b</span><br>\n      <strong>m</strong> = Steigung<br>\n      <strong>b</strong> = y-Achsenabschnitt\n    </div>\n  </div>\n</div>\n\n<p style=\"font-size:14px;margin:14px 0 8px 0;\"><strong>Aufgabe:</strong> Bestimme Steigung m und y-Achsenabschnitt b.</p>\n\n<div class=\"tbl-wrap\">\n  <table>\n    <thead><tr><th style=\"background:#d95f2b;\">Gleichung</th><th style=\"background:#d95f2b;\">m</th><th style=\"background:#d95f2b;\">b</th></tr></thead>\n    <tbody>\n      <tr><td class=\"given\">f(x) = 2x + 3</td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">g(x) = &minus;x + 5</td><td><input class=\"cell-input\" data-ans=\"-1\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"5\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">h(x) = 0,5x &minus; 2</td><td><input class=\"cell-input\" data-ans=\"0.5\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"-2\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">k(x) = 3x</td><td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"0\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">l(x) = &minus;4</td><td><input class=\"cell-input\" data-ans=\"0\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"-4\" placeholder=\"b\"></td></tr>\n    </tbody>\n  </table>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(2)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(2)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-2\"></span>\n</div>","sol_html":"<table style=\"font-family:'DM Mono',monospace;font-size:13px;border-collapse:collapse;width:100%;\">\n  <tr><td style=\"padding:4px 8px;\">f(x)=2x+3:</td><td style=\"padding:4px 8px;\">m=<strong>2</strong>, b=<strong>3</strong></td></tr>\n  <tr><td style=\"padding:4px 8px;\">g(x)=&minus;x+5:</td><td style=\"padding:4px 8px;\">m=<strong>&minus;1</strong>, b=<strong>5</strong></td></tr>\n  <tr><td style=\"padding:4px 8px;\">h(x)=0,5x&minus;2:</td><td style=\"padding:4px 8px;\">m=<strong>0,5</strong>, b=<strong>&minus;2</strong></td></tr>\n  <tr><td style=\"padding:4px 8px;\">k(x)=3x:</td><td style=\"padding:4px 8px;\">m=<strong>3</strong>, b=<strong>0</strong></td></tr>\n  <tr><td style=\"padding:4px 8px;\">l(x)=&minus;4:</td><td style=\"padding:4px 8px;\">m=<strong>0</strong>, b=<strong>&minus;4</strong></td></tr>\n</table>","hilfen":[]},{"task_html":"<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Aufgabe a) &ndash; Wertetabelle</div>\n  <p style=\"font-size:14px;margin:0 0 10px 0;\">F&#xFC;lle die Wertetabelle f&#xFC;r <strong>f(x) = 2x &minus; 1</strong> aus.</p>\n  <div class=\"tbl-wrap\">\n    <table>\n      <thead><tr><th style=\"background:#2563eb;\">x</th><th style=\"background:#2563eb;\">&minus;3</th><th style=\"background:#2563eb;\">&minus;2</th><th style=\"background:#2563eb;\">&minus;1</th><th style=\"background:#2563eb;\">0</th><th style=\"background:#2563eb;\">1</th><th style=\"background:#2563eb;\">2</th><th style=\"background:#2563eb;\">3</th></tr></thead>\n      <tbody>\n        <tr><td class=\"row-label\">f(x)</td>\n          <td><input class=\"cell-input\" data-ans=\"-7\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"-5\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"-3\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"-1\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"1\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"5\" placeholder=\"?\"></td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n</div>\n\n<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Aufgabe b) &ndash; Wertetabelle</div>\n  <p style=\"font-size:14px;margin:0 0 10px 0;\">F&#xFC;lle die Wertetabelle f&#xFC;r <strong>g(x) = &minus;x + 2</strong> aus.</p>\n  <div class=\"tbl-wrap\">\n    <table>\n      <thead><tr><th style=\"background:#2563eb;\">x</th><th style=\"background:#2563eb;\">&minus;3</th><th style=\"background:#2563eb;\">&minus;2</th><th style=\"background:#2563eb;\">&minus;1</th><th style=\"background:#2563eb;\">0</th><th style=\"background:#2563eb;\">1</th><th style=\"background:#2563eb;\">2</th><th style=\"background:#2563eb;\">3</th></tr></thead>\n      <tbody>\n        <tr><td class=\"row-label\">g(x)</td>\n          <td><input class=\"cell-input\" data-ans=\"5\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"4\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"1\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"0\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"-1\" placeholder=\"?\"></td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(3)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(3)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-3\"></span>\n</div>\n\n<div class=\"task-block task-orange\" style=\"margin-top:14px;\">\n  <div class=\"task-block-label\">Aufgabe c) &ndash; Funktionsgraph</div>\n  <p style=\"font-size:14px;margin:0;\">Zeichne beide Graphen in ein gemeinsames Koordinatensystem auf Papier. Klicke danach auf &bdquo;Als erledigt markieren&ldquo;.</p>\n</div>","sol_html":"<p style=\"font-size:14px;margin:0 0 8px 0;\"><strong>f(x) = 2x &minus; 1:</strong></p>\n<p style=\"font-family:'DM Mono',monospace;font-size:12px;\">x: &minus;3, &minus;2, &minus;1, 0, 1, 2, 3</p>\n<p style=\"font-family:'DM Mono',monospace;font-size:12px;margin-bottom:10px;\">y: <strong>&minus;7, &minus;5, &minus;3, &minus;1, 1, 3, 5</strong></p>\n<p style=\"font-size:14px;margin:0 0 8px 0;\"><strong>g(x) = &minus;x + 2:</strong></p>\n<p style=\"font-family:'DM Mono',monospace;font-size:12px;\">x: &minus;3, &minus;2, &minus;1, 0, 1, 2, 3</p>\n<p style=\"font-family:'DM Mono',monospace;font-size:12px;\">y: <strong>5, 4, 3, 2, 1, 0, &minus;1</strong></p>","hilfen":[]},{"task_html":"<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Info: Steigung aus zwei Punkten</div>\n  <p style=\"font-size:14px;line-height:1.7;margin:0 0 8px 0;\">Wenn zwei Punkte P<sub>1</sub>(x<sub>1</sub>&nbsp;|&nbsp;y<sub>1</sub>) und P<sub>2</sub>(x<sub>2</sub>&nbsp;|&nbsp;y<sub>2</sub>) bekannt sind, gilt:</p>\n  <p style=\"text-align:center;font-family:'DM Mono',monospace;font-size:15px;font-weight:800;margin:8px 0;\">m = (y&#x2082; &minus; y&#x2081;) &divide; (x&#x2082; &minus; x&#x2081;)</p>\n</div>\n\n<p style=\"font-size:14px;margin:14px 0 8px 0;\"><strong>Aufgabe:</strong> Berechne die Steigung der Geraden durch die beiden Punkte.</p>\n\n<div class=\"tbl-wrap\">\n  <table>\n    <thead><tr><th style=\"background:#2563eb;\">Punkt P&#x2081;</th><th style=\"background:#2563eb;\">Punkt P&#x2082;</th><th style=\"background:#2563eb;\">Steigung m</th></tr></thead>\n    <tbody>\n      <tr><td class=\"given\">(0 | 1)</td><td class=\"given\">(2 | 5)</td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">(1 | 3)</td><td class=\"given\">(4 | 9)</td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">(0 | 4)</td><td class=\"given\">(2 | 0)</td><td><input class=\"cell-input\" data-ans=\"-2\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">(&minus;2 | 1)</td><td class=\"given\">(4 | 4)</td><td><input class=\"cell-input\" data-ans=\"0.5\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">(1 | &minus;2)</td><td class=\"given\">(3 | 4)</td><td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"?\"></td></tr>\n    </tbody>\n  </table>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(4)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(4)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-4\"></span>\n</div>","sol_html":"<div style=\"font-family:'DM Mono',monospace;font-size:13px;line-height:2.2;\">\n  (5&minus;1)&divide;(2&minus;0) = <strong>2</strong><br>\n  (9&minus;3)&divide;(4&minus;1) = <strong>2</strong><br>\n  (0&minus;4)&divide;(2&minus;0) = <strong>&minus;2</strong><br>\n  (4&minus;1)&divide;(4&minus;(&minus;2)) = 3&divide;6 = <strong>0,5</strong><br>\n  (4&minus;(&minus;2))&divide;(3&minus;1) = 6&divide;2 = <strong>3</strong>\n</div>","hilfen":[]},{"task_html":"<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Info: m und b aus dem Graphen ablesen</div>\n  <div style=\"display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;\">\n    <svg viewBox=\"0 0 200 200\" style=\"width:180px;flex-shrink:0;border:1px solid #ddd;border-radius:8px;background:#fafafa;\" xmlns=\"http://www.w3.org/2000/svg\">\n      <line x1=\"10\" y1=\"100\" x2=\"190\" y2=\"100\" stroke=\"#cbd5e1\" stroke-width=\"1\"/>\n      <line x1=\"100\" y1=\"10\" x2=\"100\" y2=\"190\" stroke=\"#cbd5e1\" stroke-width=\"1\"/>\n      <line x1=\"10\" y1=\"150\" x2=\"190\" y2=\"10\" stroke=\"#2563eb\" stroke-width=\"2.5\"/>\n      <circle cx=\"100\" cy=\"75\" r=\"5\" fill=\"#d97706\"/>\n      <text x=\"107\" y=\"73\" font-size=\"10\" fill=\"#d97706\" font-family=\"monospace\">b = 3</text>\n      <text x=\"140\" y=\"38\" font-size=\"10\" fill=\"#2563eb\" font-family=\"monospace\">m =</text>\n      <line x1=\"120\" y1=\"80\" x2=\"160\" y2=\"80\" stroke=\"#dc2626\" stroke-width=\"1.5\" stroke-dasharray=\"3,2\"/>\n      <line x1=\"160\" y1=\"55\" x2=\"160\" y2=\"80\" stroke=\"#16a34a\" stroke-width=\"1.5\" stroke-dasharray=\"3,2\"/>\n      <text x=\"133\" y=\"93\" font-size=\"9\" fill=\"#dc2626\" font-family=\"monospace\">+2</text>\n      <text x=\"163\" y=\"72\" font-size=\"9\" fill=\"#16a34a\" font-family=\"monospace\">+1</text>\n      <text x=\"104\" y=\"195\" font-size=\"9\" fill=\"#94a3b8\" font-family=\"monospace\">x</text>\n      <text x=\"12\" y=\"103\" font-size=\"9\" fill=\"#94a3b8\" font-family=\"monospace\">y</text>\n    </svg>\n    <div style=\"font-size:14px;line-height:1.8;\">\n      1. <strong>b</strong> ablesen: Wo schneidet die Gerade die y-Achse?<br>\n      2. <strong>m</strong> berechnen: Steigungsdreieck einzeichnen &rarr; m = &Delta;y &divide; &Delta;x\n    </div>\n  </div>\n</div>\n\n<p style=\"font-size:14px;margin:14px 0 8px 0;\"><strong>Aufgabe:</strong> Lies m und b aus den beschriebenen Graphen ab.</p>\n\n<div class=\"tbl-wrap\">\n  <table>\n    <thead><tr><th style=\"background:#2563eb;\">Beschreibung</th><th style=\"background:#2563eb;\">m</th><th style=\"background:#2563eb;\">b</th></tr></thead>\n    <tbody>\n      <tr><td class=\"given\">Schnitt bei y=2, geht durch (1|4)</td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">Schnitt bei y=5, geht durch (2|3)</td><td><input class=\"cell-input\" data-ans=\"-1\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"5\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">Schnitt bei y=0, geht durch (3|6)</td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"0\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">Schnitt bei y=&minus;1, geht durch (4|1)</td><td><input class=\"cell-input\" data-ans=\"0.5\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"-1\" placeholder=\"b\"></td></tr>\n    </tbody>\n  </table>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(5)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(5)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-5\"></span>\n</div>","sol_html":"<div style=\"font-family:'DM Mono',monospace;font-size:13px;line-height:2.2;\">\n  Schnitt y=2, P(1|4): m=(4&minus;2)/(1&minus;0)=<strong>2</strong>, b=<strong>2</strong><br>\n  Schnitt y=5, P(2|3): m=(3&minus;5)/(2&minus;0)=<strong>&minus;1</strong>, b=<strong>5</strong><br>\n  Schnitt y=0, P(3|6): m=(6&minus;0)/(3&minus;0)=<strong>2</strong>, b=<strong>0</strong><br>\n  Schnitt y=&minus;1, P(4|1): m=(1&minus;(&minus;1))/(4&minus;0)=<strong>0,5</strong>, b=<strong>&minus;1</strong>\n</div>","hilfen":[]},{"task_html":"<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Info: Geradengleichung aus zwei Punkten</div>\n  <p style=\"font-size:14px;line-height:1.7;margin:0 0 6px 0;\">Vorgehen in 3 Schritten:</p>\n  <ol style=\"font-size:14px;line-height:2;padding-left:20px;\">\n    <li>Steigung berechnen: <span style=\"font-family:'DM Mono',monospace;font-weight:700;\">m = (y&#x2082;&minus;y&#x2081;) &divide; (x&#x2082;&minus;x&#x2081;)</span></li>\n    <li>In y = mx + b einsetzen (einen Punkt nutzen)</li>\n    <li>b ausrechnen</li>\n  </ol>\n  <p style=\"font-size:13px;margin-top:8px;background:#dbeafe;border-radius:8px;padding:8px 12px;\"><strong>Beispiel</strong> P&#x2081;(0|2), P&#x2082;(3|8):<br>m = (8&minus;2)/(3&minus;0) = 2 &rarr; y = 2x + b<br>P&#x2081; einsetzen: 2 = 2&middot;0 + b &rarr; b = 2 &rarr; <strong>y = 2x + 2</strong></p>\n</div>\n\n<p style=\"font-size:14px;margin:14px 0 8px 0;\"><strong>Aufgabe:</strong> Bestimme m und b.</p>\n\n<div class=\"tbl-wrap\">\n  <table>\n    <thead><tr><th style=\"background:#2563eb;\">P&#x2081;</th><th style=\"background:#2563eb;\">P&#x2082;</th><th style=\"background:#2563eb;\">m</th><th style=\"background:#2563eb;\">b</th></tr></thead>\n    <tbody>\n      <tr><td class=\"given\">(0|1)</td><td class=\"given\">(1|4)</td><td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"1\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">(0|&minus;2)</td><td class=\"given\">(2|2)</td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"-2\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">(1|5)</td><td class=\"given\">(3|1)</td><td><input class=\"cell-input\" data-ans=\"-2\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"7\" placeholder=\"b\"></td></tr>\n      <tr><td class=\"given\">(2|3)</td><td class=\"given\">(6|5)</td><td><input class=\"cell-input\" data-ans=\"0.5\" placeholder=\"m\"></td><td><input class=\"cell-input\" data-ans=\"2\" placeholder=\"b\"></td></tr>\n    </tbody>\n  </table>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(6)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(6)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-6\"></span>\n</div>","sol_html":"<div style=\"font-family:'DM Mono',monospace;font-size:13px;line-height:2.2;\">\n  P&#x2081;(0|1), P&#x2082;(1|4): m=(4&minus;1)/1=<strong>3</strong>, b=<strong>1</strong> &rarr; y=3x+1<br>\n  P&#x2081;(0|&minus;2), P&#x2082;(2|2): m=(2&minus;(&minus;2))/2=<strong>2</strong>, b=<strong>&minus;2</strong> &rarr; y=2x&minus;2<br>\n  P&#x2081;(1|5), P&#x2082;(3|1): m=(1&minus;5)/2=<strong>&minus;2</strong>, b=5&minus;(&minus;2&middot;1)=<strong>7</strong> &rarr; y=&minus;2x+7<br>\n  P&#x2081;(2|3), P&#x2082;(6|5): m=(5&minus;3)/4=<strong>0,5</strong>, b=3&minus;0,5&middot;2=<strong>2</strong> &rarr; y=0,5x+2\n</div>","hilfen":[]},{"task_html":"<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Info: Nullstelle</div>\n  <p style=\"font-size:14px;line-height:1.7;margin:0 0 8px 0;\">Die <strong>Nullstelle</strong> ist der x-Wert, bei dem f(x) = 0 ist. Sie zeigt, wo der Graph die <strong>x-Achse schneidet</strong>.</p>\n  <p style=\"font-size:13px;background:#dbeafe;border-radius:8px;padding:8px 12px;\"><strong>Beispiel:</strong> f(x) = 2x &minus; 4<br>0 = 2x &minus; 4 | +4<br>4 = 2x | &divide;2<br>x = <strong>2</strong> &rarr; Nullstelle bei x = 2</p>\n</div>\n\n<p style=\"font-size:14px;margin:14px 0 8px 0;\"><strong>Aufgabe:</strong> Berechne die Nullstelle.</p>\n\n<div class=\"tbl-wrap\">\n  <table>\n    <thead><tr><th style=\"background:#2563eb;\">Funktion</th><th style=\"background:#2563eb;\">Nullstelle x</th></tr></thead>\n    <tbody>\n      <tr><td class=\"given\">f(x) = 2x &minus; 6</td><td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">g(x) = &minus;x + 4</td><td><input class=\"cell-input\" data-ans=\"4\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">h(x) = 3x + 9</td><td><input class=\"cell-input\" data-ans=\"-3\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">k(x) = 0,5x &minus; 3</td><td><input class=\"cell-input\" data-ans=\"6\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">l(x) = &minus;2x + 5</td><td><input class=\"cell-input\" data-ans=\"2.5\" placeholder=\"?\"></td></tr>\n    </tbody>\n  </table>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(7)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(7)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-7\"></span>\n</div>","sol_html":"<div style=\"font-family:'DM Mono',monospace;font-size:13px;line-height:2.2;\">\n  2x&minus;6=0 &rarr; x=<strong>3</strong><br>\n  &minus;x+4=0 &rarr; x=<strong>4</strong><br>\n  3x+9=0 &rarr; x=<strong>&minus;3</strong><br>\n  0,5x&minus;3=0 &rarr; x=<strong>6</strong><br>\n  &minus;2x+5=0 &rarr; x=<strong>2,5</strong>\n</div>","hilfen":[]},{"task_html":"<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Situation</div>\n  <p style=\"font-size:14px;line-height:1.7;margin:0;\">Ein Taxi kostet <strong>3 &euro; Grundgeb&#xFC;hr</strong> plus <strong>1,50 &euro; pro Kilometer</strong>.</p>\n</div>\n\n<div class=\"task-block task-orange\" style=\"margin-top:12px;\">\n  <div class=\"task-block-label\">Aufgabe a) &ndash; Wertetabelle erg&#xE4;nzen</div>\n  <div class=\"tbl-wrap\">\n    <table>\n      <thead><tr><th style=\"background:#2563eb;\">Kilometer (x)</th><th style=\"background:#2563eb;\">0</th><th style=\"background:#2563eb;\">2</th><th style=\"background:#2563eb;\">5</th><th style=\"background:#2563eb;\">10</th></tr></thead>\n      <tbody>\n        <tr><td class=\"row-label\">Kosten f(x) in &euro;</td>\n          <td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"6\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"10.5\" placeholder=\"?\"></td>\n          <td><input class=\"cell-input\" data-ans=\"18\" placeholder=\"?\"></td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n</div>\n\n<div class=\"task-block task-green\" style=\"margin-top:12px;\">\n  <div class=\"task-block-label\">Aufgabe b) &ndash; Steigung und y-Achsenabschnitt</div>\n  <p style=\"font-size:14px;margin:0 0 10px 0;\">Trage m und b ein.</p>\n  <div class=\"tbl-wrap\">\n    <table>\n      <thead><tr><th style=\"background:#16a34a;\">Steigung m</th><th style=\"background:#16a34a;\">y-Achsenabschnitt b</th></tr></thead>\n      <tbody>\n        <tr>\n          <td><input class=\"cell-input\" data-ans=\"1.5\" placeholder=\"m\"></td>\n          <td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"b\"></td>\n        </tr>\n      </tbody>\n    </table>\n  </div>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(8)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(8)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-8\"></span>\n</div>\n\n<div class=\"task-block task-orange\" style=\"margin-top:14px;\">\n  <div class=\"task-block-label\">Aufgabe c) &ndash; Aufgabe abgeben</div>\n  <p style=\"font-size:14px;margin:0;\">Wie viel kostet eine Fahrt von 15 km? Rechne auf Papier und gib die Aufgabe ab.</p>\n</div>","sol_html":"<div style=\"font-size:14px;line-height:1.8;\">\n  <strong>a) Wertetabelle:</strong><br>\n  <span style=\"font-family:'DM Mono',monospace;\">f(0)=3 &euro; | f(2)=6 &euro; | f(5)=10,50 &euro; | f(10)=18 &euro;</span><br><br>\n  <strong>b) Funktionsgleichung:</strong><br>\n  m = <strong>1,5</strong> (pro km), b = <strong>3</strong> (Grundgeb&#xFC;hr)<br>\n  <span style=\"font-family:'DM Mono',monospace;\">f(x) = 1,5x + 3</span><br><br>\n  <strong>c) 15 km:</strong><br>\n  <span style=\"font-family:'DM Mono',monospace;\">f(15) = 1,5 &middot; 15 + 3 = 22,5 + 3 = <strong>25,50 &euro;</strong></span>\n</div>","hilfen":[]}];
+let HILFEN=[];
 
 const _inIframe=window.self!==window.top;
 let serverSyncDone=!_inIframe;
 let done=_inIframe?new Set():new Set(JSON.parse(localStorage.getItem(KEY)||'[]'));
-let korrekturState={};
-const ABGABE_KEY_LOCAL=ABGABE_KEY;
-let abgabeState=_inIframe?{}:JSON.parse(localStorage.getItem(ABGABE_KEY_LOCAL)||'{}');
+let cur=null;
 
 function save(){
   const val=JSON.stringify([...done]);
@@ -68,26 +94,161 @@ window.addEventListener('message',e=>{
   if(e.data.type!=='RELOAD_PROGRESS')return;
   const stored=localStorage.getItem(KEY);
   if(stored){try{done=new Set(JSON.parse(stored));}catch{}}
-  const storedAbgabe=localStorage.getItem(ABGABE_KEY_LOCAL);
+  const storedAbgabe=localStorage.getItem(ABGABE_KEY);
   if(storedAbgabe){try{abgabeState=JSON.parse(storedAbgabe);}catch{}}
   serverSyncDone=true;
   if(done.size>0)save();
+  if(abgabeState&&Object.keys(abgabeState).length>0){
+    const enc=JSON.stringify(abgabeState);
+    localStorage.setItem(ABGABE_KEY,enc);
+    window.parent.postMessage({type:'SAVE_PROGRESS',key:ABGABE_KEY,value:enc},'*');
+  }
   updProg();buildOverview();
 });
 
-function abgabeChecked(g){return !!abgabeState[g];}
-function toggleAbgabe(g,val){
-  abgabeState[g]=val;
-  const encoded=JSON.stringify(abgabeState);
-  localStorage.setItem(ABGABE_KEY_LOCAL,encoded);
-  window.parent.postMessage({type:'SAVE_PROGRESS',key:ABGABE_KEY_LOCAL,value:encoded},'*');
-  buildOverview();
+function parseVal(str){
+  if(!str)return NaN;
+  let s=str.trim().replace(/,/g,'.').replace(/\s+/g,'').replace(/[a-zA-ZäöüÄÖÜ²³€]+$/,'');
+  return parseFloat(s);
+}
+function approxEq(a,b){
+  if(isNaN(a)||isNaN(b))return false;
+  if(a===0&&b===0)return true;
+  return Math.abs(a-b)/Math.max(Math.abs(b),1e-15)<0.01||Math.abs(a-b)<0.05;
+}
+
+function saveInputs(){
+  if(cur===null)return;
+  const inputs=document.querySelectorAll('#st-body .cell-input');
+  if(!inputs.length)return;
+  const vals={};
+  inputs.forEach((inp,i)=>{vals[i]=inp.value;});
+  const key='lerntheke_inputs_'+cur;
+  const encoded=JSON.stringify(vals);
+  localStorage.setItem(key,encoded);
+  window.parent.postMessage({type:'SAVE_PROGRESS',key,value:encoded},'*');
+}
+function loadInputs(id){
+  const key='lerntheke_inputs_'+id;
+  const raw=localStorage.getItem(key);
+  if(!raw)return;
+  try{
+    const vals=JSON.parse(raw);
+    const inputs=document.querySelectorAll('#st-body .cell-input');
+    inputs.forEach((inp,i)=>{if(vals[i]!==undefined&&vals[i]!=='')inp.value=vals[i];});
+  }catch(e){}
+}
+
+function checkStation(stId){
+  saveInputs();
+  const inputs=document.querySelectorAll('#st-body .cell-input');
+  let correct=0,total=0,empty=0;
+  inputs.forEach(inp=>{
+    total++;
+    const ans=parseFloat(inp.dataset.ans);
+    const val=parseVal(inp.value);
+    inp.classList.remove('input-ok','input-err','input-empty');
+    if(!inp.value.trim()){inp.classList.add('input-empty');empty++;}
+    else if(approxEq(val,ans)){inp.classList.add('input-ok');correct++;}
+    else{inp.classList.add('input-err');}
+  });
+  const pct=Math.round(correct/total*100);
+  const passed=pct>=75&&empty===0;
+  const res=document.getElementById('check-result-'+stId);
+  if(res){
+    if(empty>0){res.innerHTML='⚠️ Noch <strong>'+empty+'</strong> Feld'+(empty===1?'':'er')+' leer.';res.className='check-result warn';}
+    else if(pct===100){res.innerHTML='🎉 <strong>100% richtig!</strong> Perfekt!';res.className='check-result success';}
+    else if(passed){res.innerHTML='✓ <strong>'+pct+'%</strong> richtig – Lösung freigeschaltet!';res.className='check-result success';}
+    else{res.innerHTML='<strong>'+pct+'%</strong> ('+correct+'/'+total+') – mind. 75% zum Freischalten.';res.className='check-result error';}
+  }
+  const solWrap=document.querySelector('.sol-wrap');
+  const solLock=document.getElementById('sol-lock-'+stId);
+  if(passed){
+    if(solWrap)solWrap.style.display='';
+    if(solLock)solLock.style.display='none';
+    if(!done.has(cur)){done.add(cur);save();updProg();buildOverview();}
+  }else{
+    if(solWrap)solWrap.style.display='none';
+    if(solLock)solLock.style.display='flex';
+  }
+}
+function resetStation(stId){
+  document.querySelectorAll('#st-body .cell-input').forEach(inp=>{inp.value='';inp.classList.remove('input-ok','input-err','input-empty');});
+  const res=document.getElementById('check-result-'+stId);
+  if(res){res.textContent='';res.className='check-result';}
+}
+
+function toggleDone(){
+  if(done.has(cur))done.delete(cur);else done.add(cur);
+  save();updProg();
+  const isDone=done.has(cur);
+  const db=document.getElementById('btn-done');
+  db.className='btn-done'+(isDone?' active':'');
+  db.textContent=isDone?'✓ Erledigt':'Als erledigt markieren';
+  buildOverview();showView('view-st');
+}
+function toggleSol(btn){
+  const panel=btn.nextElementSibling;
+  const hidden=panel.style.display==='none'||!panel.style.display;
+  panel.style.display=hidden?'':'none';
+  btn.textContent=hidden?'🔼 Lösung ausblenden':'🔍 Lösung anzeigen';
+}
+
+function showSt(id){
+  saveInputs();cur=id;
+  const m=META[id],c=CONTENT[id];
+  if(!m||!c)return;
+  document.getElementById('st-title').textContent=m.title;
+  const badge=document.getElementById('st-badge');
+  badge.textContent=m.group;badge.style.background=m.gc;
+  const isDone=done.has(id);
+  const db=document.getElementById('btn-done');
+  db.className='btn-done'+(isDone?' active':'');
+  db.textContent=isDone?'✓ Erledigt':'Als erledigt markieren';
+  const hasCheck=c.task_html&&c.task_html.includes('check-result-'+id);
+  db.style.display=hasCheck?'none':'';
+  let body=`<div class="panel"><div class="panel-lbl">Aufgabe</div>${c.task_html}</div>`;
+  if(c.sol_html){
+    if(hasCheck){
+      body+=`<div class="sol-lock" id="sol-lock-${id}" style="display:flex;">🔒 Lösung wird nach 75% richtiger Antworten freigeschaltet.</div>`;
+      body+=`<div class="sol-wrap" style="display:none"><button class="btn-reveal" onclick="toggleSol(this)">🔍 Lösung anzeigen</button><div style="display:none" class="panel sol-panel"><div class="panel-lbl">Lösung</div>${c.sol_html}</div></div>`;
+    }else{
+      body+=`<div class="sol-wrap"><button class="btn-reveal" onclick="toggleSol(this)">🔍 Lösung anzeigen</button><div style="display:none" class="panel sol-panel"><div class="panel-lbl">Lösung</div>${c.sol_html}</div></div>`;
+    }
+  }
+  document.getElementById('st-body').innerHTML=body;
+  const strip=document.getElementById('hilfe-strip');
+  if(m.hilfen&&m.hilfen.length&&HILFEN.length){
+    document.getElementById('hilfe-btns').innerHTML=m.hilfen.map(h=>{
+      const hd=HILFEN[h-1];
+      if(!hd)return'';
+      return`<button class="btn-hilfe" onclick="showH(${h-1})">💡 ${hd.title}</button>`;
+    }).join('');
+    strip.style.display='block';
+  }else{strip.style.display='none';}
+  showView('view-st');
+  setTimeout(()=>loadInputs(id),50);
+}
+function showH(idx){
+  if(!HILFEN[idx])return;
+  const h=HILFEN[idx];
+  document.getElementById('hv-title').textContent=h.title;
+  document.getElementById('btn-back-h').onclick=()=>showSt(cur);
+  document.getElementById('hilfe-card').innerHTML=h.html;
+  showView('view-h');
+}
+function showOv(){saveInputs();buildOverview();showView('view-ov');}
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function groupStats(){
   const stats={};
   GROUP_ORDER.forEach(g=>{
-    const all=META.filter(s=>s.group===g);
+    if(!GROUPS[g])return;
+    const all=META.filter(s=>s&&s.group===g);
     const doneCount=all.filter(s=>done.has(s.id)).length;
     const req=GROUPS[g].required;
     const stationsOk=doneCount>=req;
@@ -103,8 +264,9 @@ function updProg(){
   const stats=groupStats();
   let steps=0,total=0;
   GROUP_ORDER.forEach(g=>{
+    if(!stats[g])return;
     const st=stats[g];
-    steps+=Math.min(st.done,st.req); total+=st.req;
+    steps+=Math.min(st.done,st.req);total+=st.req;
     if(g!=='Pflicht'){
       if(st.abgabeOk)steps++;total++;
       if(st.korOk&&st.abgabeOk)steps++;total++;
@@ -118,11 +280,43 @@ function updProg(){
 function buildReqCards(stats){}
 
 
+function buildGrid(stats){
+  const gridEl=document.getElementById('grid');
+  if(!gridEl)return;
+  const groups=GROUP_ORDER.filter(g=>GROUPS[g]&&stats[g]&&stats[g].total>0);
+  if(!groups.length){gridEl.innerHTML='';return;}
+  gridEl.innerHTML=groups.map(g=>{
+    const all=META.filter(s=>s&&s.group===g);
+    const gInfo=GROUPS[g];const gDone=all.filter(s=>done.has(s.id)).length;
+    return`<div class="group-section">
+      <div class="group-header">
+        <span class="group-name" style="color:${gInfo.color}">${gInfo.emoji} ${g}</span>
+        <span class="group-prog-text">${gDone}/${gInfo.required} Ziel · ${gDone}/${gInfo.total} gesamt</span>
+      </div>
+      <div class="stations-grid">
+        ${all.map(s=>{
+          const isDone=done.has(s.id);
+          return`<div class="scard ${isDone?'done':''}"
+            style="${isDone?`border-color:${s.gc};background:${s.gbg};`:''}"
+            data-id="${s.id}" onclick="showSt(${s.id})">
+            <style>.scard[data-id="${s.id}"]::before{background:${s.gc};}.scard[data-id="${s.id}"]:hover{border-color:${s.gc};}</style>
+            <div class="scard-top">
+              <span class="scard-num" style="color:${s.gc}">${s.group.charAt(0)}${all.indexOf(s)+1}</span>
+              <div class="scard-check" style="background:${s.gc}">✓</div>
+            </div>
+            <div class="scard-title">${s.title}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function buildOverview(){
   const stats=groupStats();
   buildReqCards(stats);
   const lzkEl=document.getElementById('lzk-status');
-  if(lzkEl){
+  if(lzkEl&&Object.keys(stats).length){
     const pflichtOk=stats['Pflicht']&&stats['Pflicht'].stationsOk;
     const basisOk=stats['Basis']&&stats['Basis'].stationsOk;
     const aufbauOk=stats['Aufbau']&&stats['Aufbau'].stationsOk;
@@ -142,26 +336,25 @@ function buildOverview(){
       lzkEl.innerHTML='<span class="lzk-status-icon">🎯</span><div class="lzk-status-text"><strong>Nächstes Ziel: Basis-LZK</strong>Pflicht + mind. '+bReq+' Basis-Stationen – bisher: '+bDone+'/'+bReq+'.</div>';
     }
   }
-  const gridEl=document.getElementById('grid');
-  if(gridEl){
-    gridEl.innerHTML=GROUP_ORDER.map(g=>{
-      const all=META.filter(s=>s.group===g);
-      return`<div class="group-section">
-        <div class="group-header">
-          <span class="group-name" style="color:${GROUPS[g].color}">${GROUPS[g].emoji} ${g}</span>
-        </div>
-        ${all.length?'<div class="stations-grid">'+all.map(s=>`<div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;font-size:13px;font-family:'Syne',sans-serif;font-weight:700;">${s.title}</div>`).join('')+'</div>':'<div class="empty-group">Noch keine Stationen – kommt bald.</div>'}
-      </div>`;
-    }).join('');
-  }
+  buildGrid(stats);
   updProg();
 }
 
+const ABGABE_KEY_LOCAL=ABGABE_KEY;
+let korrekturState={};
+let abgabeState=_inIframe?{}:JSON.parse(localStorage.getItem(ABGABE_KEY_LOCAL)||'{}');
+function abgabeChecked(g){return !!abgabeState[g];}
+function toggleAbgabe(g,val){
+  abgabeState[g]=val;
+  const encoded=JSON.stringify(abgabeState);
+  localStorage.setItem(ABGABE_KEY_LOCAL,encoded);
+  window.parent.postMessage({type:'SAVE_PROGRESS',key:ABGABE_KEY_LOCAL,value:encoded},'*');
+  buildOverview();
+}
 async function loadKorrektur(){
   try{const r=await fetch('/api/korrektur');if(r.ok)korrekturState=await r.json();}catch(e){}
   buildOverview();
 }
-
 if(_inIframe)loadKorrektur();
 buildOverview();
 </script>

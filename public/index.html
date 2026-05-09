@@ -697,6 +697,7 @@ function buildAp(s, lt) {
 }
 
 function computeLtStats(lt, progVal, abgabeVal, kor) {
+  if (!lt || !lt.groups) return { groups: {}, pct: 0, steps: 0, total: 0 };
   const groups = parseGroupsForLt(lt, progVal, abgabeVal, kor || {});
   let steps = 0, total = 0;
   Object.entries(lt.groups).forEach(([g, grp]) => {
@@ -717,6 +718,7 @@ function studentLtStats(s, lt) {
 }
 
 function parseGroupsForLt(lt, progVal, abgabeVal, korrekturObj) {
+  if (!lt || !lt.groups) return {};
   const prog = safeJSON(progVal);
   const abg  = safeJSON(abgabeVal);
   const kor  = korrekturObj || {};

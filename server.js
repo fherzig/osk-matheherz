@@ -235,8 +235,13 @@ function readStationsDir(lernthekeId) {
 }
 
 function replaceJsConstant(html, varName, newValue) {
-  const marker = `const ${varName}=`;
-  const idx = html.indexOf(marker);
+  // Support const, let, and var declarations
+  let marker = '', idx = -1;
+  for (const kw of ['const', 'let', 'var']) {
+    const m = `${kw} ${varName}=`;
+    const i = html.indexOf(m);
+    if (i !== -1 && (idx === -1 || i < idx)) { idx = i; marker = m; }
+  }
   if (idx === -1) return html;
   const after = html.slice(idx + marker.length);
   const opener = after[0];
@@ -363,8 +368,14 @@ app.get('/api/lerntheken', requireLogin, (req, res) => {
 
 // ── Lerntheken metadata (KEY, GROUPS, station→group map, totals) ──────────────
 function extractJSValue(html, varName) {
-  const marker = `const ${varName}=`;
-  const idx = html.indexOf(marker);
+  // Support const, let, and var declarations
+  let idx = -1;
+  let marker = '';
+  for (const kw of ['const', 'let', 'var']) {
+    const m = `${kw} ${varName}=`;
+    const i = html.indexOf(m);
+    if (i !== -1 && (idx === -1 || i < idx)) { idx = i; marker = m; }
+  }
   if (idx === -1) return null;
   const start = idx + marker.length;
   const opener = html[start];

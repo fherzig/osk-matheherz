@@ -1,0 +1,12 @@
+{
+  "id": 7,
+  "title": "Nullstellen bestimmen",
+  "group": "Basis",
+  "gc": "#2563eb",
+  "gbg": "#eff6ff",
+  "gbr": "#bfdbfe",
+  "hilfen": [],
+  "hasSol": true,
+  "task_html": "<div class=\"task-block task-blue\">\n  <div class=\"task-block-label\">Info: Nullstelle</div>\n  <p style=\"font-size:14px;line-height:1.7;margin:0 0 8px 0;\">Die <strong>Nullstelle</strong> ist der x-Wert, bei dem f(x) = 0 ist. Sie zeigt, wo der Graph die <strong>x-Achse schneidet</strong>.</p>\n  <p style=\"font-size:13px;background:#dbeafe;border-radius:8px;padding:8px 12px;\"><strong>Beispiel:</strong> f(x) = 2x &minus; 4<br>0 = 2x &minus; 4 | +4<br>4 = 2x | &divide;2<br>x = <strong>2</strong> &rarr; Nullstelle bei x = 2</p>\n</div>\n\n<p style=\"font-size:14px;margin:14px 0 8px 0;\"><strong>Aufgabe:</strong> Berechne die Nullstelle.</p>\n\n<div class=\"tbl-wrap\">\n  <table>\n    <thead><tr><th style=\"background:#2563eb;\">Funktion</th><th style=\"background:#2563eb;\">Nullstelle x</th></tr></thead>\n    <tbody>\n      <tr><td class=\"given\">f(x) = 2x &minus; 6</td><td><input class=\"cell-input\" data-ans=\"3\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">g(x) = &minus;x + 4</td><td><input class=\"cell-input\" data-ans=\"4\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">h(x) = 3x + 9</td><td><input class=\"cell-input\" data-ans=\"-3\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">k(x) = 0,5x &minus; 3</td><td><input class=\"cell-input\" data-ans=\"6\" placeholder=\"?\"></td></tr>\n      <tr><td class=\"given\">l(x) = &minus;2x + 5</td><td><input class=\"cell-input\" data-ans=\"2.5\" placeholder=\"?\"></td></tr>\n    </tbody>\n  </table>\n</div>\n\n<div class=\"check-bar\">\n  <button class=\"btn-check\" onclick=\"checkStation(7)\">&#x2713; &#xDC;berpr&#xFC;fen</button>\n  <button class=\"btn-reset\" onclick=\"resetStation(7)\">&#x21BA; Zur&#xFC;cksetzen</button>\n  <span class=\"check-result\" id=\"check-result-7\"></span>\n</div>",
+  "sol_html": "<div style=\"font-family:'DM Mono',monospace;font-size:13px;line-height:2.2;\">\n  2x&minus;6=0 &rarr; x=<strong>3</strong><br>\n  &minus;x+4=0 &rarr; x=<strong>4</strong><br>\n  3x+9=0 &rarr; x=<strong>&minus;3</strong><br>\n  0,5x&minus;3=0 &rarr; x=<strong>6</strong><br>\n  &minus;2x+5=0 &rarr; x=<strong>2,5</strong>\n</div>"
+}
