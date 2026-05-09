@@ -477,27 +477,38 @@ async function showPicker() {
   if (!ltMeta.length) {
     try { const mr = await fetch('/api/lerntheken-meta'); if (mr.ok) ltMeta = await mr.json(); } catch {}
   }
-  let allProg = {};
-  try { const pr = await fetch('/api/progress'); if (pr.ok) allProg = await pr.json(); } catch {}
+  let allProg = {}, korData = {};
+  try { const pr = await fetch('/api/progress');  if (pr.ok) allProg = await pr.json(); } catch {}
+  try { const kr = await fetch('/api/korrektur'); if (kr.ok) korData = await kr.json(); } catch {}
 
   const container = document.getElementById('picker-cards');
   container.innerHTML = ltMeta.map(lt => {
-    let doneArr = [];
-    try { doneArr = JSON.parse(allProg[lt.key] || '[]'); } catch {}
-    const doneCount = Array.isArray(doneArr) ? doneArr.length : 0;
-    const pct = lt.total ? Math.round(doneCount / lt.total * 100) : 0;
-    const groups = parseGroupsForLt(lt, allProg[lt.key], allProg[lt.abgabeKey], {});
+    const progVal   = localStorage.getItem(lt.key)       || allProg[lt.key];
+    const abgabeVal = localStorage.getItem(lt.abgabeKey) || allProg[lt.abgabeKey];
+    const groups = parseGroupsForLt(lt, progVal, abgabeVal, korData);
+    // Requirement-based progress (same definition as the lerntheke bar)
+    let steps = 0, totalSteps = 0;
+    Object.entries(lt.groups).forEach(([g, grp]) => {
+      const st = groups[g] || { done: 0, req: grp.required, abgabeOk: false, korOk: false };
+      steps += Math.min(st.done, st.req); totalSteps += st.req;
+      if (g !== 'Pflicht') {
+        if (st.abgabe)              steps++; totalSteps++;
+        if (st.korOk && st.abgabe) steps++; totalSteps++;
+      }
+    });
+    const pct = totalSteps ? Math.round(steps / totalSteps * 100) : 0;
+    const hasAny = Object.values(groups).some(st => st.done > 0);
     const badges = Object.entries(groups).map(([g, st]) => {
       const cls = st.complete ? 'gpill-ok' : st.stationsOk ? 'gpill-partial' : 'gpill-none';
       return `<span class="gpill ${cls}">${g}: ${st.complete ? '✓' : st.done+'/'+st.req}</span>`;
     }).join('');
-    const btnLabel = doneCount > 0 ? '→ Weiter' : '→ Starten';
+    const btnLabel = hasAny ? '→ Weiter' : '→ Starten';
     return `<div class="lt-card" onclick="startLerntheke('${lt.url}')">
       <div class="lt-card-title">${lt.title}</div>
       <div class="lt-card-groups">${badges}</div>
       <div>
-        <div class="lt-progress-row"><span>${doneCount} / ${lt.total} Stationen</span><span>${pct} %</span></div>
-        <div class="lt-bar"><div class="lt-bar-fill" style="width:${pct}%"></div></div>
+        <div class="lt-progress-row"><span>${pct === 100 ? '✓ Abgeschlossen' : pct + ' % der Anforderungen'}</span><span>${pct} %</span></div>
+        <div class="lt-bar"><div class="lt-bar-fill" style="width:${pct}%;background:${pct===100?'#16a34a':'var(--blue)'}"></div></div>
       </div>
       <button class="btn-primary" onclick="event.stopPropagation();startLerntheke('${lt.url}')">${btnLabel}</button>
     </div>`;
@@ -609,8 +620,20 @@ async function syncProgressToFrame() {
     const data = await r.json();
     const frame = document.getElementById('lerntheke-frame');
     if (!frame.contentWindow) return;
-    // Inject server data, but don't overwrite non-empty localStorage with empty server values
+    // Inject server data into iframe localStorage
     Object.entries(data).forEach(([k, v]) => {
+      // For abgabe keys: merge server + local (union of all true values)
+      if (k.includes('_abgabe_')) {
+        const existing = frame.contentWindow.localStorage.getItem(k);
+        if (existing && existing !== '{}') {
+          try {
+            const merged = Object.assign({}, JSON.parse(v || '{}'), JSON.parse(existing));
+            frame.contentWindow.localStorage.setItem(k, JSON.stringify(merged));
+            return;
+          } catch {}
+        }
+      }
+      // For other keys: don't overwrite non-empty localStorage with empty server value
       const isEmpty = !v || v === '[]' || v === '{}';
       const existing = frame.contentWindow.localStorage.getItem(k);
       const existingEmpty = !existing || existing === '[]' || existing === '{}';
