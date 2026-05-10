@@ -1,6 +1,24 @@
 // Shared JS engine for all lerntheken
 // Constants (KEY, META, CONTENT, etc.) are defined inline in each HTML file
 
+
+// ── Pokal-System ──────────────────────────────────────────────────────────────
+function trophyCount(done, req, total) {
+  if (done < req || total <= 0) return 0;
+  const extra = total - req;
+  if (extra === 0) return 1;
+  const t2 = req + Math.ceil(extra / 3);
+  if (done >= total) return 3;
+  if (done >= t2)    return 2;
+  return 1;
+}
+function trophyHtml(count) {
+  const cls = ['locked','bronze','silver','gold'];
+  return '<div class="trophy-bar">' +
+    [1,2,3].map(i => '<span class="trophy-icon ' + (count>=i ? cls[i] : 'locked') + '">🏆</span>').join('') +
+  '</div>';
+}
+
 // ── Generic station check/reset (used by stations with cell-inputs) ──────────
 function checkStation(stId) {
   saveInputs();
@@ -177,6 +195,7 @@ function buildGrid(stats){
             ${Array.from({length:st.req},(_,i)=>`<span class="progress-dot ${i<Math.min(st.done,st.req)?'filled':''}"></span>`).join('')}
           </div>
           <span class="progress-label">${st.done>=st.req?(st.complete?'✓ Abgeschlossen':'Aufgabe abgeben'):`${Math.min(st.done,st.req)} / ${st.req}`}</span>
+          ${trophyHtml(trophyCount(st.done, st.req, st.total))}
         </div>
       </div>
       <div class="stations-grid">${cards}</div>
