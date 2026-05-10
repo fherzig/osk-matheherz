@@ -19,6 +19,55 @@ function trophyHtml(count) {
   '</div>';
 }
 
+// ── Input Enhancements (Unit-Suffix + Floating Labels) ───────────────────────
+function enhanceInputs() {
+  // 1. Table inputs: hide black thead, add unit suffix from header text
+  document.querySelectorAll('#st-body table').forEach(table => {
+    const thead = table.querySelector('thead');
+    const ths = thead ? Array.from(thead.querySelectorAll('th')) : [];
+    const headers = ths.map(th => th.textContent.trim());
+    if (!headers.length) return;
+
+    // Hide the dark header row (unit info moved into inputs)
+    if (thead) thead.style.visibility = 'hidden'; // keep space to avoid layout jump
+
+    table.querySelectorAll('tbody tr').forEach(row => {
+      Array.from(row.querySelectorAll('td')).forEach((cell, colIdx) => {
+        const input = cell.querySelector('.cell-input');
+        if (!input || cell.querySelector('.cell-unit-wrap')) return;
+        const unit = headers[colIdx] || '';
+        if (!unit) return;
+
+        // Wrap input + add unit badge
+        const wrap = document.createElement('div');
+        wrap.className = 'cell-unit-wrap';
+        cell.insertBefore(wrap, input);
+        wrap.appendChild(input);
+        const badge = document.createElement('span');
+        badge.className = 'cell-unit-badge';
+        badge.textContent = unit;
+        wrap.appendChild(badge);
+      });
+    });
+  });
+
+  // 2. Standalone inputs (not in tables): add floating label from placeholder
+  document.querySelectorAll('#st-body .cell-input').forEach(input => {
+    if (input.closest('table') || input.closest('.input-md3') || input.closest('.cell-unit-wrap')) return;
+    const label = input.placeholder || input.dataset.label;
+    if (!label || label === '?') return;
+    const wrap = document.createElement('div');
+    wrap.className = 'input-md3';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const lbl = document.createElement('span');
+    lbl.className = 'md3-label';
+    lbl.textContent = label;
+    wrap.appendChild(lbl);
+    input.placeholder = ' '; // keep placeholder for :not(:placeholder-shown) to work
+  });
+}
+
 // ── Generic station check/reset (used by stations with cell-inputs) ──────────
 function checkStation(stId) {
   saveInputs();
@@ -301,7 +350,7 @@ function showSt(id){
     strip.style.display='block';
   }else{strip.style.display='none';}
   showView('view-st');
-  setTimeout(()=>loadInputs(id),50);
+  setTimeout(()=>{ loadInputs(id); enhanceInputs(); },50);
 }
 
 function toggleSol(btn){

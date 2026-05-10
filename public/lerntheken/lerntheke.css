@@ -141,6 +141,58 @@ button,input,textarea,select{font-family:inherit;}
   font-size:12px;font-weight:500;letter-spacing:.5px;
   color:var(--on-surface-dim);white-space:nowrap;
 }
+/* ── MD3 Text Field mit Unit-Suffix ──────────────────────────────────────── */
+/* Wrapper: input + unit-badge nebeneinander */
+.cell-unit-wrap{
+  position:relative;
+  display:flex;align-items:center;
+}
+.cell-unit-wrap .cell-input{
+  padding-right:42px;
+  text-align:left;
+  flex:1;
+}
+.cell-unit-badge{
+  position:absolute;
+  right:10px;
+  font-size:11px;font-weight:500;letter-spacing:.4px;
+  color:var(--on-surface-dim);
+  pointer-events:none;
+  white-space:nowrap;
+  user-select:none;
+}
+
+/* Floating Label für eigenständige Inputs (nicht in Tabellen) */
+.input-md3{
+  position:relative;
+  margin:6px 0;
+}
+.input-md3 .cell-input{
+  height:52px;
+  padding:20px 12px 6px;
+}
+.input-md3 .md3-label{
+  position:absolute;
+  left:12px;top:50%;
+  transform:translateY(-50%);
+  font-size:14px;font-weight:400;
+  color:var(--on-surface-dim);
+  transition:all .15s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+  background:var(--surface);
+  padding:0 3px;
+  border-radius:2px;
+}
+.input-md3 .cell-input:focus ~ .md3-label,
+.input-md3 .cell-input:not(:placeholder-shown) ~ .md3-label{
+  top:0;
+  transform:translateY(-50%) scale(.78);
+  transform-origin:left;
+  font-weight:500;
+  letter-spacing:.4px;
+  color:var(--on-surface);
+}
+
 /* ── Pokal-System ─────────────────────────────────────────────────────────── */
 .trophy-bar{display:inline-flex;align-items:center;gap:1px;margin-left:8px;}
 .trophy-icon{font-size:14px;line-height:1;transition:filter .25s,opacity .25s;}
