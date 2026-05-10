@@ -282,8 +282,11 @@ function showSt(id){
   let body=`<div class="panel"><div class="panel-lbl">Aufgabe</div>${c.task_html}</div>`;
   if(c.sol_html){
     if(isCheckStation){
-      body+=`<div class="sol-lock" id='${id===0?'sol-lock-einheiten-l':id===1?'sol-lock-einheiten-f':id===2?'sol-lock-einheiten-v':id===3?'sol-lock-fa':id===4?'sol-lock-pizza':id===5?'sol-lock-ring':id===6?'sol-lock-reifen':id===7?'sol-lock-sportplatz':id===12?'sol-lock-minipizza':id===8?'sol-lock-kreisaus':id===9?'sol-lock-flugzeug':id===10?'sol-lock-sonnensystem':id===11?'sol-lock-geraet':id===13?'sol-lock-frisbee':id===15?'sol-lock-tunnel':id===16?'sol-lock-london':'sol-lock-rep'}'>🔒 Lösung wird nach 75% richtiger Antworten freigeschaltet.</div>`;
-      body+=`<div class="sol-wrap" style="display:none"><button class="btn-reveal" onclick="toggleSol(this)">🔍 Lösung anzeigen</button><div class="panel sol-panel"><div class="panel-lbl">Lösung</div>${c.sol_html}</div></div>`;
+      // If already done: show solution immediately, hide lock
+      const lockDisplay  = isDone ? 'display:none' : '';
+      const wrapDisplay  = isDone ? ''             : 'display:none';
+      body+=`<div class="sol-lock" id='${id===0?'sol-lock-einheiten-l':id===1?'sol-lock-einheiten-f':id===2?'sol-lock-einheiten-v':id===3?'sol-lock-fa':id===4?'sol-lock-pizza':id===5?'sol-lock-ring':id===6?'sol-lock-reifen':id===7?'sol-lock-sportplatz':id===12?'sol-lock-minipizza':id===8?'sol-lock-kreisaus':id===9?'sol-lock-flugzeug':id===10?'sol-lock-sonnensystem':id===11?'sol-lock-geraet':id===13?'sol-lock-frisbee':id===15?'sol-lock-tunnel':id===16?'sol-lock-london':'sol-lock-rep'}' style="${lockDisplay}">🔒 Lösung wird nach 75% richtiger Antworten freigeschaltet.</div>`;
+      body+=`<div class="sol-wrap" style="${wrapDisplay}"><button class="btn-reveal" onclick="toggleSol(this)">🔍 Lösung anzeigen</button><div class="panel sol-panel"><div class="panel-lbl">Lösung</div>${c.sol_html}</div></div>`;
     } else {
       body+=`<div class="sol-wrap"><button class="btn-reveal" onclick="toggleSol(this)">🔍 Lösung anzeigen</button><div class="panel sol-panel"><div class="panel-lbl">Lösung</div>${c.sol_html}</div></div>`;
     }
