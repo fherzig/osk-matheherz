@@ -384,6 +384,9 @@ thead th{color:var(--surface);padding:10px 12px;text-align:left;font-weight:500;
 tbody tr:nth-child(even){background:var(--surface-tonal);}
 tbody tr:hover{background:rgba(28,27,31,.04);}
 td{padding:8px 12px;border-bottom:1px solid var(--outline-var);color:var(--on-surface);}
+/* Dark header rows in hilfen tables */
+tr[style*="background:#1C1B1F"] td,
+tr[style*="background:#1c1b1f"] td{color:#fff!important;}
 tbody tr:last-child td{border-bottom:none;}
 td.given{font-weight:500;}
 td.row-label{font-weight:500;background:var(--surface-tonal);}

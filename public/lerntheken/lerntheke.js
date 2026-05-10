@@ -378,7 +378,9 @@ function toggleDone(){
 
 function showH(idx){
   const h=HILFEN[idx];
-  document.getElementById('hv-badge').textContent='Hilfe';
+  if(!h)return;
+  const badge=document.getElementById('hv-badge');
+  if(badge)badge.textContent='Hilfe';
   document.getElementById('hv-title').textContent=h.title;
   document.getElementById('btn-back-h').onclick=()=>showSt(cur);
   document.getElementById('hilfe-card').innerHTML=h.html;
